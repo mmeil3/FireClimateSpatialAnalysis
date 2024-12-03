@@ -462,23 +462,234 @@ plot(envelope_k)
 ### Interpolation
 #### Inverse Weighted Distance
 
+We then created a density surface for temperature using the point data from the weather stations across the province. The Inverse Distance Weighting method was employed to estimate a surface. IDW is a deterministic interpolation technique that estimates the values of unsampled points from values at nearby locations (Oyana, 2021, p. 282). This helps predict values where measurements are not available. It’s important to note it is topographically sensitive. 
+
+The formula below is used to calculate a surface: 
+$$ 
+Z_i = \frac{\sum_{i=1}^{n} z_j}{\sum_{i=1}^{n} d_{ij}^p}
+$$
+
+where Zj is the value at location j, dij is the distance between points i and j, and p is a power exponent that controls the degree to which weights are controlled by distance.
+
+
+To create this interpolated surface, please use the code below: 
+
+```r
+#Set working directory
+dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
+setwd(dir)
+
+
+
+# Load necessary libraries
+library(sf)       # For handling shapefiles
+library(gstat)    # For geostatistical methods
+library(ggplot2)  # For plotting
+library(viridis)  # For color scales
+
+# Read the shapefile
+climate_data <- st_read("ClimateData.shp")
+
+# Check the structure of the data to ensure it contains the TEMP variable
+print(head(climate_data))
+
+climate_data <- st_transform(climate_data, crs = 3005)  # Transform climate data to EPSG:3005
+
+# Create a grid for the interpolation
+# Adjust the extent and resolution of the grid according to your needs
+bbox <- st_bbox(bc_boundary)
+grid <- st_transform(grid, crs = 3005)  # Make sure the grid uses the same CRS
+grid <- st_make_grid(st_as_sfc(bbox), cellsize = c(50000, 50000))  # Adjust the cell size
+
+# Interpolate using IDW
+idw_result <- gstat::idw(TEMP ~ 1, 
+                         locations = climate_data, 
+                         newdata = st_as_sf(grid), 
+                         idp = 2)
+
+ # Convert idw_result to an sf object
+idw_sf <- st_as_sf(idw_result)
+
+# Extract coordinates 
+idw_sf <- st_as_sf(idw_result)
+
+
+# Plot the results using geom_sf() for better handling of sf objects
+ggplot(data = idw_sf) +
+  geom_sf(aes(fill = var1.pred), color = NA) +  # Fill based on predicted values
+  scale_fill_viridis_c() +
+  labs(title = "IDW Interpolation of Temperature", x = "Longitude", y = "Latitude") +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+# Save the result to a shapefile if needed
+st_write(idw_sf, "./IDW_Result.shp", driver = "ESRI Shapefile", delete_dsn = TRUE)
+
+
+#########################################
+
+# Step 1: Load the polygon shapefile for clipping
+bc_boundary <- st_read("BC_Boundary.shp")  # Ensure the path is correct
+
+# Verify the structure of the polygon shapefile
+print(head(bc_boundary))
+# Check the CRS of both objects
+crs_idw <- st_crs(idw_sf)  # CRS of IDW result
+crs_polygon <- st_crs(bc_boundary)  # CRS of the polygon shapefile
+
+print(crs_idw)
+print(crs_polygon)
+
+# Step to transform the CRS of either shapefile if they do not match
+if (crs_idw != crs_polygon) {
+  # Transform the IDW result to match the CRS of the polygon
+  idw_sf <- st_transform(idw_sf, crs = crs_polygon)  # Transform IDW result to polygon's CRS
+  message("Transformed IDW result CRS to match the polygon.")
+} else {
+  message("CRS of IDW result and polygon already match.")
+}
+
+# Now attempt the intersection again
+idw_clipped <- st_intersection(idw_sf, bc_boundary)
+
+# Check the results of clipping
+print(st_geometry(idw_clipped))  # Check geometry to ensure it's clipped correctly
+
+
+# Step 3: Create the map of the clipped results
+ggplot(data = idw_clipped) +
+  geom_sf(aes(fill = var1.pred), color = NA) +  # Fill based on predicted temperature values
+  scale_fill_viridis_c(option = "D") +  # Use viridis color scale for better readability
+  labs(title = "Clipped IDW Interpolation of Temperature",
+       fill = "Temperature (°C)",  # Change label as appropriate
+       x = "Longitude", 
+       y = "Latitude") +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+# Step 4: Save the map as an image file (optional)
+ggsave("Clipped_IDW_Interpolation_Map.png", width = 10, height = 8, dpi = 300)
+
+```
 ### Regression
 #### Least Squares Regression
+```r
+# Read the shapefile
+final_data_sf <- st_read("final_data.shp")
+
+# Fit the OLS regression model on the entire spatial data
+# Use "temprtr" instead of "temperature"
+ols_model <- lm(fires ~ temprtr, data = final_data_sf)
+
+# Add residuals to the original spatial data frame
+final_data_sf$residuals <- resid(ols_model)
+
+# Inspect the updated spatial object to verify residuals are added
+print(head(final_data_sf))
+
+# (Optional) Save the updated shapefile with residuals
+st_write(final_data_sf, "final_data_with_residuals.shp", delete_dsn = TRUE)
+
+# Create a map of residuals from the OLS regression
+ggplot(data = final_data_sf) +
+  geom_sf(aes(fill = residuals)) + # Map the residuals to fill color
+  scale_fill_viridis_c(option = "C", name = "Residuals") + # Use a color scale
+  theme_minimal() +
+  labs(title = "Map of Residuals from OLS Regression",
+       fill = "Residuals") +
+  theme(legend.position = "right")
+
+# Optional: Save the plot if desired
+ggsave("residuals_map.png", width = 10, height = 8, dpi = 300)
+
+```
 #### Geographically Weighted Regression
 
+```r
+install.packages("spgwr")
 
+library(spgwr)
+library(spdep)
 
+# Read the shapefile (with residuals included)
+final_data_sf <- st_read("final_data.shp")
 
-A quadrat analysis is an alternative way of testing whether a spatial pattern is significantly different from a random spatial pattern. A study area is broken up into cells (quadrats) where we can analyse the variance of each cell. If there was no variance, it would mean that all points are evenly distributed across each cell. This is extremely unlikely to occur with our crime data, expected that we see larger variance throughout the cells. Variance is heavily influenced by the density of points, meaning the mean number of points in a cell. However, we can place our mean in the denominator in order to standardize our measurements and decrease the influence of density/points per cell. This allows us to calculate our variance-mean ratio (VMR). In a perfectly random distribution, VAR and MEAN are equal. This is like our mean NND being equal to mean NND for random distribution.
+# Preview the data to check variable names and content
+print(head(final_data_sf))
+print(colnames(final_data_sf))
 
-VAR = \frac{\Sigma f_ix_i^2 - [\frac{(\Sigma f_ix_i)^2}{m}]}{m-1}
+# Convert the sf object to Spatial object
+final_data_sp <- as_Spatial(final_data_sf)
 
-We then need to perform an inferential test statistic to determine if the spatial pattern is significantly different than random. We use a chi-squared test.  We perform a chi-squared test because we assume our data follows a Poisson distribution, visualising the probability of a given number of events occurring in a fixed interval of time (Siegel, 2016).A shortfall of the VMR is that it does not account for determining the varying distances of points within the cell. This is what the K-Function is useful for.
+# Create neighborhood structure
+neighbors <- poly2nb(final_data_sp, queen = TRUE)
 
-K(d) = \lambda^{-1}E(N_d)
-Where Nd is the number of points within a distance d of randomly chosen point from all recorded points, and λ is the density of points (measured as points per unit area for the study site). This means K(d) is the ratio between the number of points within d from a random point, and the density of points in the study area. E is used to represent the estimated number of N points, within a given distance(d).
+# Check neighbors for any issues
+print(summary(neighbors))
 
- When values of K (d) are higher, it means that we have more points than expected at a given distance from a random point, we could infer that our distributing is clustered. This means lower values of K(d) for a given distance (D) indicates we have fewer points than what is expected at a given distance, we can infer our distribution is dispersed.
+# Check for any empty neighbors
+if (any(sapply(neighbors, length) == 0)) {
+  warning("Some polygons have no neighbors. This may cause issues for GWR.")
+}
+
+# Prepare the dependent and independent variables
+dependent_var <- final_data_sp@data$fires
+independent_vars <- final_data_sp@data$temprtr
+
+# Check if both variables are numeric
+if (!is.numeric(dependent_var) || !is.numeric(independent_vars)) {
+  stop("Dependent and independent variables must be numeric.")
+}
+
+# Run GWR with a fixed bandwidth of 50 km
+fixed_bandwidth <- 50000  # Bandwidth in meters (50 km)
+
+gwr_model_fixed <- gwr(dependent_var ~ independent_vars, 
+                       data = final_data_sp, 
+                       bandwidth = fixed_bandwidth, 
+                       se.fit = TRUE)
+
+# Validate that the model ran successfully
+if (is.null(gwr_model_fixed)) {
+  stop("The GWR model did not return any results.")
+}
+
+if (is.null(gwr_model_fixed$SDF)) {
+  stop("The GWR model SDF is NULL, indicating it might not have calculated properly.")
+}
+
+# Print GWR summary
+print(summary(gwr_model_fixed))
+
+# Extract centroids from final_data_sf
+centroids_fixed <- st_centroid(final_data_sf)
+
+# Extract coordinates of centroids
+coordinates_fixed <- st_coordinates(centroids_fixed)
+
+# Check that the number of rows matches
+if (nrow(gwr_results_fixed) == nrow(coordinates_fixed)) {
+  # Combine GWR results with centroid coordinates
+  gwr_results_fixed <- cbind(gwr_results_fixed, coordinates_fixed)
+} else {
+  stop("Mismatch between GWR results and centroid coordinates.")
+}
+
+# Convert GWR results to an sf object
+gwr_output_sf_fixed <- st_as_sf(gwr_results_fixed, coords = c("X", "Y"), crs = st_crs(final_data_sf))
+
+# Plotting GWR coefficients with the fixed bandwidth
+ggplot(data = gwr_output_sf_fixed) +
+  geom_sf(aes(color = gwr.e)) +
+  scale_fill_viridis_c(option = "C") +
+  labs(title = "GWR Coefficients with Fixed Bandwidth of 50 km",
+       fill = "GWR Estimate") +
+  theme_minimal()
+
+# Optional: Save the plot
+ggsave("gwr_coefficients_fixed_bandwidth.png", width = 10, height = 8, dpi = 300)
+```
+
 ```r
 
   # Load necessary libraries
@@ -801,103 +1012,7 @@ ggplot() +
 ```
 
 ### Interpolation-IDW and Kriging
-```r
-#Set working directory
-dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
-setwd(dir)
 
-
-
-# Load necessary libraries
-library(sf)       # For handling shapefiles
-library(gstat)    # For geostatistical methods
-library(ggplot2)  # For plotting
-library(viridis)  # For color scales
-
-# Read the shapefile
-climate_data <- st_read("ClimateData.shp")
-
-# Check the structure of the data to ensure it contains the TEMP variable
-print(head(climate_data))
-
-climate_data <- st_transform(climate_data, crs = 3005)  # Transform climate data to EPSG:3005
-
-# Create a grid for the interpolation
-# Adjust the extent and resolution of the grid according to your needs
-bbox <- st_bbox(bc_boundary)
-grid <- st_transform(grid, crs = 3005)  # Make sure the grid uses the same CRS
-grid <- st_make_grid(st_as_sfc(bbox), cellsize = c(50000, 50000))  # Adjust the cell size
-
-# Interpolate using IDW
-idw_result <- gstat::idw(TEMP ~ 1, 
-                         locations = climate_data, 
-                         newdata = st_as_sf(grid), 
-                         idp = 2)
-
- # Convert idw_result to an sf object
-idw_sf <- st_as_sf(idw_result)
-
-# Extract coordinates 
-idw_sf <- st_as_sf(idw_result)
-
-
-# Plot the results using geom_sf() for better handling of sf objects
-ggplot(data = idw_sf) +
-  geom_sf(aes(fill = var1.pred), color = NA) +  # Fill based on predicted values
-  scale_fill_viridis_c() +
-  labs(title = "IDW Interpolation of Temperature", x = "Longitude", y = "Latitude") +
-  theme_minimal() +
-  theme(legend.position = "right")
-
-# Save the result to a shapefile if needed
-st_write(idw_sf, "./IDW_Result.shp", driver = "ESRI Shapefile", delete_dsn = TRUE)
-
-
-#########################################
-
-# Step 1: Load the polygon shapefile for clipping
-bc_boundary <- st_read("BC_Boundary.shp")  # Ensure the path is correct
-
-# Verify the structure of the polygon shapefile
-print(head(bc_boundary))
-# Check the CRS of both objects
-crs_idw <- st_crs(idw_sf)  # CRS of IDW result
-crs_polygon <- st_crs(bc_boundary)  # CRS of the polygon shapefile
-
-print(crs_idw)
-print(crs_polygon)
-
-# Step to transform the CRS of either shapefile if they do not match
-if (crs_idw != crs_polygon) {
-  # Transform the IDW result to match the CRS of the polygon
-  idw_sf <- st_transform(idw_sf, crs = crs_polygon)  # Transform IDW result to polygon's CRS
-  message("Transformed IDW result CRS to match the polygon.")
-} else {
-  message("CRS of IDW result and polygon already match.")
-}
-
-# Now attempt the intersection again
-idw_clipped <- st_intersection(idw_sf, bc_boundary)
-
-# Check the results of clipping
-print(st_geometry(idw_clipped))  # Check geometry to ensure it's clipped correctly
-
-
-# Step 3: Create the map of the clipped results
-ggplot(data = idw_clipped) +
-  geom_sf(aes(fill = var1.pred), color = NA) +  # Fill based on predicted temperature values
-  scale_fill_viridis_c(option = "D") +  # Use viridis color scale for better readability
-  labs(title = "Clipped IDW Interpolation of Temperature",
-       fill = "Temperature (°C)",  # Change label as appropriate
-       x = "Longitude", 
-       y = "Latitude") +
-  theme_minimal() +
-  theme(legend.position = "right")
-
-# Step 4: Save the map as an image file (optional)
-ggsave("Clipped_IDW_Interpolation_Map.png", width = 10, height = 8, dpi = 300)
-
-```
 ### Density for Events Data
 ```r
 #Set working directory
@@ -1013,121 +1128,9 @@ write.csv(final_data_df, "final_data.csv", row.names = FALSE)
 
 ```
 ### Least Squares Regression
-```r
-# Read the shapefile
-final_data_sf <- st_read("final_data.shp")
 
-# Fit the OLS regression model on the entire spatial data
-# Use "temprtr" instead of "temperature"
-ols_model <- lm(fires ~ temprtr, data = final_data_sf)
-
-# Add residuals to the original spatial data frame
-final_data_sf$residuals <- resid(ols_model)
-
-# Inspect the updated spatial object to verify residuals are added
-print(head(final_data_sf))
-
-# (Optional) Save the updated shapefile with residuals
-st_write(final_data_sf, "final_data_with_residuals.shp", delete_dsn = TRUE)
-
-# Create a map of residuals from the OLS regression
-ggplot(data = final_data_sf) +
-  geom_sf(aes(fill = residuals)) + # Map the residuals to fill color
-  scale_fill_viridis_c(option = "C", name = "Residuals") + # Use a color scale
-  theme_minimal() +
-  labs(title = "Map of Residuals from OLS Regression",
-       fill = "Residuals") +
-  theme(legend.position = "right")
-
-# Optional: Save the plot if desired
-ggsave("residuals_map.png", width = 10, height = 8, dpi = 300)
-
-```
 ### Geographically Weighted Regression
-```r
-install.packages("spgwr")
 
-library(spgwr)
-library(spdep)
-
-# Read the shapefile (with residuals included)
-final_data_sf <- st_read("final_data.shp")
-
-# Preview the data to check variable names and content
-print(head(final_data_sf))
-print(colnames(final_data_sf))
-
-# Convert the sf object to Spatial object
-final_data_sp <- as_Spatial(final_data_sf)
-
-# Create neighborhood structure
-neighbors <- poly2nb(final_data_sp, queen = TRUE)
-
-# Check neighbors for any issues
-print(summary(neighbors))
-
-# Check for any empty neighbors
-if (any(sapply(neighbors, length) == 0)) {
-  warning("Some polygons have no neighbors. This may cause issues for GWR.")
-}
-
-# Prepare the dependent and independent variables
-dependent_var <- final_data_sp@data$fires
-independent_vars <- final_data_sp@data$temprtr
-
-# Check if both variables are numeric
-if (!is.numeric(dependent_var) || !is.numeric(independent_vars)) {
-  stop("Dependent and independent variables must be numeric.")
-}
-
-# Run GWR with a fixed bandwidth of 50 km
-fixed_bandwidth <- 50000  # Bandwidth in meters (50 km)
-
-gwr_model_fixed <- gwr(dependent_var ~ independent_vars, 
-                       data = final_data_sp, 
-                       bandwidth = fixed_bandwidth, 
-                       se.fit = TRUE)
-
-# Validate that the model ran successfully
-if (is.null(gwr_model_fixed)) {
-  stop("The GWR model did not return any results.")
-}
-
-if (is.null(gwr_model_fixed$SDF)) {
-  stop("The GWR model SDF is NULL, indicating it might not have calculated properly.")
-}
-
-# Print GWR summary
-print(summary(gwr_model_fixed))
-
-# Extract centroids from final_data_sf
-centroids_fixed <- st_centroid(final_data_sf)
-
-# Extract coordinates of centroids
-coordinates_fixed <- st_coordinates(centroids_fixed)
-
-# Check that the number of rows matches
-if (nrow(gwr_results_fixed) == nrow(coordinates_fixed)) {
-  # Combine GWR results with centroid coordinates
-  gwr_results_fixed <- cbind(gwr_results_fixed, coordinates_fixed)
-} else {
-  stop("Mismatch between GWR results and centroid coordinates.")
-}
-
-# Convert GWR results to an sf object
-gwr_output_sf_fixed <- st_as_sf(gwr_results_fixed, coords = c("X", "Y"), crs = st_crs(final_data_sf))
-
-# Plotting GWR coefficients with the fixed bandwidth
-ggplot(data = gwr_output_sf_fixed) +
-  geom_sf(aes(color = gwr.e)) +
-  scale_fill_viridis_c(option = "C") +
-  labs(title = "GWR Coefficients with Fixed Bandwidth of 50 km",
-       fill = "GWR Estimate") +
-  theme_minimal()
-
-# Optional: Save the plot
-ggsave("gwr_coefficients_fixed_bandwidth.png", width = 10, height = 8, dpi = 300)
-```
 ### Descriptive stats, PPA
 
 ### PPA
