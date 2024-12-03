@@ -1,4 +1,6 @@
 ### Exploring Relationships between British Columbia's Climate and Fire Events in 2021: A Statistical Analysis
+#### Michaela Meil: Advanced Spatial Analysis Final Project
+#### December 2024
 Introduction
 
 ## Context
@@ -607,7 +609,88 @@ ggsave("residuals_map.png", width = 10, height = 8, dpi = 300)
 ```
 ### Geographically Weighted Regression
 ```r
-still working on
+install.packages("spgwr")
+
+library(spgwr)
+library(spdep)
+
+# Read the shapefile (with residuals included)
+final_data_sf <- st_read("final_data.shp")
+
+# Preview the data to check variable names and content
+print(head(final_data_sf))
+print(colnames(final_data_sf))
+
+# Convert the sf object to Spatial object
+final_data_sp <- as_Spatial(final_data_sf)
+
+# Create neighborhood structure
+neighbors <- poly2nb(final_data_sp, queen = TRUE)
+
+# Check neighbors for any issues
+print(summary(neighbors))
+
+# Check for any empty neighbors
+if (any(sapply(neighbors, length) == 0)) {
+  warning("Some polygons have no neighbors. This may cause issues for GWR.")
+}
+
+# Prepare the dependent and independent variables
+dependent_var <- final_data_sp@data$fires
+independent_vars <- final_data_sp@data$temprtr
+
+# Check if both variables are numeric
+if (!is.numeric(dependent_var) || !is.numeric(independent_vars)) {
+  stop("Dependent and independent variables must be numeric.")
+}
+
+# Run GWR with a fixed bandwidth of 50 km
+fixed_bandwidth <- 50000  # Bandwidth in meters (50 km)
+
+gwr_model_fixed <- gwr(dependent_var ~ independent_vars, 
+                       data = final_data_sp, 
+                       bandwidth = fixed_bandwidth, 
+                       se.fit = TRUE)
+
+# Validate that the model ran successfully
+if (is.null(gwr_model_fixed)) {
+  stop("The GWR model did not return any results.")
+}
+
+if (is.null(gwr_model_fixed$SDF)) {
+  stop("The GWR model SDF is NULL, indicating it might not have calculated properly.")
+}
+
+# Print GWR summary
+print(summary(gwr_model_fixed))
+
+# Extract centroids from final_data_sf
+centroids_fixed <- st_centroid(final_data_sf)
+
+# Extract coordinates of centroids
+coordinates_fixed <- st_coordinates(centroids_fixed)
+
+# Check that the number of rows matches
+if (nrow(gwr_results_fixed) == nrow(coordinates_fixed)) {
+  # Combine GWR results with centroid coordinates
+  gwr_results_fixed <- cbind(gwr_results_fixed, coordinates_fixed)
+} else {
+  stop("Mismatch between GWR results and centroid coordinates.")
+}
+
+# Convert GWR results to an sf object
+gwr_output_sf_fixed <- st_as_sf(gwr_results_fixed, coords = c("X", "Y"), crs = st_crs(final_data_sf))
+
+# Plotting GWR coefficients with the fixed bandwidth
+ggplot(data = gwr_output_sf_fixed) +
+  geom_sf(aes(color = gwr.e)) +
+  scale_fill_viridis_c(option = "C") +
+  labs(title = "GWR Coefficients with Fixed Bandwidth of 50 km",
+       fill = "GWR Estimate") +
+  theme_minimal()
+
+# Optional: Save the plot
+ggsave("gwr_coefficients_fixed_bandwidth.png", width = 10, height = 8, dpi = 300)
 ```
 ### Descriptive stats, PPA
 ```r
