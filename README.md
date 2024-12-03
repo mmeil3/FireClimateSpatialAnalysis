@@ -62,6 +62,23 @@ Thinkn of it as themes other than whole sections of methods
 *  PPA, interpolation, regression
 * Cleaning Climate Data
     * Renaming
+    * A Nearest Neighbour Analysis (NND) is a simple and popular approach to characterize spatial arrangement of points in a study area. It operates by measuring the distance between each point, and its nearest neighbour. All the distances are then summed together and divided by the number of points in a given study area. This gives us the average nearest neighbour distance (NND). We can compare our mean NND to another random NND in our dataset to conclude whether our pattern is clustered, random, or dispersed. When NND is close to 0, we conclude there is a random pattern. When it is larger than a random pattern, we conclude it is dispersed, and when it is smaller, we conclude it is a clustered pattern. This will help us answer one of our main research questions.
+
+The average nearest neighbour value for a spatially random distribution is calculated using the following equation:
+    \bar{NND_R} = \frac{1}{2\sqrt{Density}}
+\bar{NND_D} = \frac{1.07453}{\sqrt{Density}}
+Z_n = \frac{\bar{NND} - \bar{NND_R}}{\sigma\bar{NND}}
+
+A quadrat analysis is an alternative way of testing whether a spatial pattern is significantly different from a random spatial pattern. A study area is broken up into cells (quadrats) where we can analyse the variance of each cell. If there was no variance, it would mean that all points are evenly distributed across each cell. This is extremely unlikely to occur with our crime data, expected that we see larger variance throughout the cells. Variance is heavily influenced by the density of points, meaning the mean number of points in a cell. However, we can place our mean in the denominator in order to standardize our measurements and decrease the influence of density/points per cell. This allows us to calculate our variance-mean ratio (VMR). In a perfectly random distribution, VAR and MEAN are equal. This is like our mean NND being equal to mean NND for random distribution.
+
+VAR = \frac{\Sigma f_ix_i^2 - [\frac{(\Sigma f_ix_i)^2}{m}]}{m-1}
+
+We then need to perform an inferential test statistic to determine if the spatial pattern is significantly different than random. We use a chi-squared test.  We perform a chi-squared test because we assume our data follows a Poisson distribution, visualising the probability of a given number of events occurring in a fixed interval of time (Siegel, 2016).A shortfall of the VMR is that it does not account for determining the varying distances of points within the cell. This is what the K-Function is useful for.
+
+K(d) = \lambda^{-1}E(N_d)
+Where Nd is the number of points within a distance d of randomly chosen point from all recorded points, and λ is the density of points (measured as points per unit area for the study site). This means K(d) is the ratio between the number of points within d from a random point, and the density of points in the study area. E is used to represent the estimated number of N points, within a given distance(d).
+
+ When values of K (d) are higher, it means that we have more points than expected at a given distance from a random point, we could infer that our distributing is clustered. This means lower values of K(d) for a given distance (D) indicates we have fewer points than what is expected at a given distance, we can infer our distribution is dispersed.
 ```r
 
   # Load necessary libraries
