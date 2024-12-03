@@ -1214,6 +1214,7 @@ Like when its broken up the same as the methods-people reading it know what to e
 Little text, good figures and tables-there to help you use less text
 
 ## Discussion
+The NNDMean and NNDRandom  values from this test indicate that wildfire events in British Columbia are spatially clustered. This result shows strong evidence of significant clustering as indicated by the z-score of -65.2628 (see Figure 7). The quadrat analysis results indicate that wildfires have a clustered spatial distribution, with strong evidence that the clustering is statistically significant as indicated by the chi square value of 12866. 6506, which produces a p-value \< 0.0001 (see Figure 8). Please see the K-Function results for wildfire events in 2021 (Figure 9). They appear to be significantly spatially clustered at distances greater than 10,000 metres. 
 
 Describe results
 Overall, the results from this study show…..(ex, rainfall is poor predictor of variability of wildfire)
