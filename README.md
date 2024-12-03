@@ -694,8 +694,207 @@ ggsave("gwr_coefficients_fixed_bandwidth.png", width = 10, height = 8, dpi = 300
 ```
 ### Descriptive stats, PPA
 ```r
-still working on
+install.packages("terra")
+install.packages("lubridate")
+install.packages("e1071")
+install.packages("gridExtra")
+install.packages("gtable")
+install.packages("grid")
+install.packages("ggplot2")
+install.packages("dplyr")
+install.packages("bcmaps")
+install.packages("tmap")
+install.packages("sf")
+
+library("terra")
+library("lubridate")
+library("e1071")
+library("gtable")
+library("grid")
+library("gridExtra")
+library("ggplot2")
+library("dplyr")
+library("bcmaps")
+library("raster")
+library("maps")
+library("tmap")
+
+dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
+setwd(dir)
+getwd()
+
+# Load shapefile
+shp <- vect("./H_FIRE_PNT_point.shp")
+df <- as.data.frame(shp)
+
+# Filter for 2021 data
+df <- subset(df, df$FIRE_YEAR == 2021)
+
+# Inspect the format of the IGN_DATE column
+head(df$IGN_DATE)
+str(df$IGN_DATE)
+
+# Extract the date part (YYYYMMDD)
+df$IGN_DT <- as.Date(substr(df$IGN_DATE, 1, 8), format = "%Y%m%d")
+
+# Check if the conversion worked
+head(df$IGN_DT)
+range(df$IGN_DT, na.rm = TRUE)
+# Extract day of the year
+df$IGN_Day <- yday(df$IGN_DT)
+
+# Extract month as a labeled factor
+df$IGN_Month <- month(df$IGN_DT, label = TRUE, abbr = TRUE)
+
+# Check results
+head(df[, c("IGN_DATE", "IGN_DT", "IGN_Day", "IGN_Month")])
+
+
+# Create subsets for annual and summer (June 1 to August 31)
+df_year <- df
+df_Summer <- subset(df, IGN_Day >= 152 & IGN_Day <= 243)  # Adjusted day range
+# Filter summer data (June 1 - August 31)
+print(nrow(df_Summer))
+head(df_Summer)
+
+# Calculate descriptive statistics
+meanPop <- mean(df_year$SIZE_HA, na.rm = TRUE)
+meanSummer <- mean(df_Summer$SIZE_HA, na.rm = TRUE)
+sdPop <- sd(df_year$SIZE_HA, na.rm = TRUE)
+sdSummer <- sd(df_Summer$SIZE_HA, na.rm = TRUE)
+modePop <- as.numeric(names(sort(table(df_year$SIZE_HA), decreasing = TRUE))[1])
+modeSummer <- as.numeric(names(sort(table(df_Summer$SIZE_HA), decreasing = TRUE))[1])
+medPop <- median(df_year$SIZE_HA, na.rm = TRUE)
+medSummer <- median(df_Summer$SIZE_HA, na.rm = TRUE)
+skewPop <- skewness(df_year$SIZE_HA, na.rm = TRUE)
+skewSummer <- skewness(df_Summer$SIZE_HA, na.rm = TRUE)
+kurtPop <- kurtosis(df_year$SIZE_HA, na.rm = TRUE)
+kurtSummer <- kurtosis(df_Summer$SIZE_HA, na.rm = TRUE)
+CoVPop <- (sdPop / meanPop) * 100
+CoVSummer <- (sdSummer / meanSummer) * 100
+normPop_PVAL <- shapiro.test(df_year$SIZE_HA)$p.value
+normSummer_PVAL <- shapiro.test(df_Summer$SIZE_HA)$p.value
+
+samples = c("Population", "Summer") #Create an object for the labels
+
+means = c(meanPop, meanSummer) #Create an object for the means
+sd = c(sdPop, sdSummer) #Create an object for the standard deviations
+median = c(medPop, medSummer) #Create an object for the medians
+mode <- c(modePop, modeSummer) #Create an object for the modes
+skewness <- c(skewPop, skewSummer) #Create an object for the skewness
+kurtosis <- c(kurtPop, kurtSummer) #Create an object for the kurtosis
+CoV <- c(CoVPop, CoVSummer) #Create an object for the CoV
+normality <- c(normPop_PVAL, normSummer_PVAL) #Create an object for the normality PVALUE
+
+means <- round(means, 3)
+sd <- round(sd, 3)
+median <- round(median, 3)
+mode <- round(mode,3)
+skewness <- round(skewness,3)
+kurtosis <- round(kurtosis,3)
+CoV <- round(CoV, 3)
+normality <- round(normality, 5)
+
+data.for.table1 = data.frame(samples, means, sd, median, mode)
+data.for.table2 = data.frame(samples, skewness, kurtosis, CoV, normality)
+outCSV <- data.frame(samples, means, sd, median, mode, skewness, kurtosis, CoV, normality)
+write.csv(outCSV, "./FireDescriptiveStats_2021.csv", row.names = FALSE)
+
+table1 <- tableGrob(data.for.table1, rows = c("","")) #make a table "Graphical Object" (GrOb) 
+t1Caption <- textGrob("Fire Descriptive Statistics 2021 (Central Tendencies)", gp = gpar(fontsize = 09))
+padding <- unit(5, "mm")
+
+table1 <- gtable_add_rows(table1, 
+                          heights = grobHeight(t1Caption) + padding, 
+                          pos = 0)
+
+table1 <- gtable_add_grob(table1,
+                          t1Caption, t = 1, l = 2, r = ncol(data.for.table1) + 1)
+
+table2 <- tableGrob(data.for.table2, rows = c("",""))
+t2Caption <- textGrob("Fire Descriptive Statistics 2021 (Relative Position)", gp = gpar(fontsize = 09))
+padding <- unit(5, "mm")
+
+table2 <- gtable_add_rows(table2, 
+                          heights = grobHeight(t2Caption) + padding, 
+                          pos = 0)
+
+table2 <- gtable_add_grob(table2,
+                          t2Caption, t = 1, l = 2, r = ncol(data.for.table2) + 1)
+
+grid.arrange(table1, newpage = TRUE)
+grid.arrange(table2, newpage = TRUE)
+
+png("Output_Table1.png")
+grid.arrange(table1, newpage = TRUE)
+dev.off() 
+
+png("Output_Table2.png") 
+grid.arrange(table2, newpage = TRUE)
+dev.off()
+
+png("Output_Histogram.png")
+hist(df_year$SIZE_HA, breaks = 30, main = "Frequency of Wild Fire Sizes", xlab = "Size of Wild Fire (ha)", caption = "Figure 1: Wild Fire Size by month in 2021") #Base R style
+dev.off()
+
+barGraph <- df_year %>% #store graph in bar graph variable and pass data frame as first argument in next line
+  group_by(IGN_Month) %>% #use data frame and group by month and pass to first argument in next line
+  summarise(sumSize = sum(SIZE_HA, na.rm = TRUE)) %>% #sum up the total fire size for each month and pass to GGplot
+  ggplot(aes(x = IGN_Month, y = sumSize)) + #make new GGPLOT with summary as data and month and total fire size as x and y
+  geom_bar(stat = "identity") + #make bar chart with the Y values from the data (identity)
+  labs(title = "Total Burned Area by Month 2021", x = "Month", y = "Total Burned Area (ha)", caption = "Figure 3: Total Burned Area by month in 2021") + #label plot, x axis, y axis
+  theme_classic() + #set the theme to classic (removes background and borders etc.)
+  theme(plot.title = element_text(face = "bold", hjust = 0.5), plot.caption = element_text(hjust = 0.5)) #set title to center and bold
+barGraph
+
+png("Output_BarGraph_GG.png")
+barGraph
+dev.off()
+
+bc <- as_Spatial(bc_neighbours()) #Get shapefile of BC boundary
+raster::crs(bc)
+bc <- spTransform(bc, CRS("+init=epsg:4326")) #Project your data to WGS84 geographic (Lat/Long)
+bc <- bc[which(bc$name == "British Columbia" ),] #Extract just the BC province
+
+png("FirstMap.png")
+map(bc, fill = TRUE, col = "white", bg = "lightblue", ylim = c(40, 70)) #Make map of province
+points(df_year$LONGITUDE ,df_year$LATITUDE , col = "red", pch = 16) #Add fire points
+dev.off()
+
+coords <- df_year[, c("LONGITUDE", "LATITUDE")] #Store coordinates in new object
+crs <- CRS("+init=epsg:4326") #store the coordinate system (CRS) in a new object
+firePoints <- SpatialPointsDataFrame(coords = coords, data = df_year, proj4string = crs) #Make new spatial Points object using coodinates, data, and projection
+
+map_TM <- tm_shape(bc) + #make the main shape
+  tm_fill(col = "gray50") +  #fill polygons
+  tm_shape(firePoints) +
+  tm_symbols(col = "red", alpha = 0.3) +
+  tm_layout(title = "BC Fire Locations 2021", title.position = c("LEFT", "BOTTOM"))
+
+map_TM
+
+meanCenter <- data.frame(name = "Mean Center of fire points", long = mean(df_year$LONGITUDE), lat = mean(df_year$LATITUDE))
+
+coords2 <- meanCenter[, c("long", "lat")]
+crs2 <- CRS("+init=epsg:4326")
+meanCenterPoint <- SpatialPointsDataFrame(coords = coords2, data = meanCenter, proj4string = crs2)
+
+map_TM <- tm_shape(bc) + 
+  tm_fill(col = "gray50") +  
+  tm_shape(firePoints) +
+  tm_symbols(col = "red", alpha = 0.3) +
+  tm_shape(meanCenterPoint) +
+  tm_symbols(col = "blue", alpha = 0.8) +
+  tm_add_legend(type = "symbol", labels = c("Fire Points", "Mean Center"), col = c(adjustcolor( "red", alpha.f = 0.3), adjustcolor( "blue", alpha.f = 0.8)), shape = c(19,19)) +
+  tm_layout(title = "BC Fire Locations 2021", title.position = c("LEFT", "BOTTOM"), legend.position = c("RIGHT", "TOP"))
+
+map_TM
+
+png("TmMap.png")
+map_TM
+dev.off()
 ```
+
 ![Map](CENTRALTENDENCIES.png)
 
 Figure 1: Central Tendencies Fire Descriptive Statistics for British Columbia in 2021
