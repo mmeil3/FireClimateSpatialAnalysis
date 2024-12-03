@@ -696,9 +696,38 @@ ggsave("gwr_coefficients_fixed_bandwidth.png", width = 10, height = 8, dpi = 300
 ```r
 still working on
 ```
+
 Use formulas, 1-2 sentences about what these are-what and why
 
 ## Results
+![Map](ClimateDataBCFigure1.png)
+*Figure 1: Map of Climate Data Points in British Columbia, Data Retrieved from PCDS.
+
+### Point Pattern Analysis:
+![Map]
+
+*Figure 3: Table of Nearest Neighbour Analysis Results
+![Map](.png)
+
+*Figure 3: Table of Quadrat Analysis Results
+![Map](Kfunctionresults.png)
+
+*Figure 3: k-function results
+### Interpolation?
+![Map](DensityPFwBC.png)
+
+*Figure 2: Density Points of Fires within British Columbia
+![Map](BCIDWTemperature.png)
+*Figure 3: British Columbia Inverse Distance Weighting Interpolation Surface of Temperature
+
+### Regression
+![Map](BCRegression.png)
+*Figure 4: British Columbia Map of Residuals from Least Squares Regression Analysis
+![Map](LocalR2.png)
+*Figure 3: Local R2 with Banwidth of 50 km for British Columbia
+![Map](GWR.png)
+*Figure 3: Geographically Weighted Regression Coefficients with 50km Bandwith in British Columbia
+
 
 Can say what they tables have, but don’t describe them specifically, everything needs a caption
 Like when its broken up the same as the methods-people reading it know what to expect
