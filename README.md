@@ -696,9 +696,13 @@ ggsave("gwr_coefficients_fixed_bandwidth.png", width = 10, height = 8, dpi = 300
 ```r
 still working on
 ```
+![Map](CENTRALTENDENCIES.png)
 
+Figure 1: Central Tendencies Fire Descriptive Statistics for British Columbia in 2021
 Use formulas, 1-2 sentences about what these are-what and why
 
+![Map](RELATIVEPOSITION.png)
+Figure 2: Relative Position Fire Descriptive Statistics for British Columbia in 2021
 ## Results
 ![Map](ClimateDataBCFigure1.png)
 *Figure 1: Map of Climate Data Points in British Columbia, Data Retrieved from PCDS.
