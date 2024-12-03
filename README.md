@@ -1183,17 +1183,25 @@ We evaluated spatial distribution of fires, to determine if points are clustered
 ### Regression
 #### Least Squares Regression
 #### Geographically Weighted Regression
-### Point Pattern Analysis:
+
+
+## Results
+### Point Pattern Analysis
+##### Nearest Neighbour Analysis
 ![Map](nnd_analysis_table.png)
 
 *Figure 7: Table of Nearest Neighbour Analysis Results
+#### Quadrat Analysis
 ![Map](quadrat_analysis_table.png)
 
 *Figure 8: Table of Quadrat Analysis Results
 ![Map](Kfunctionresults.png)
+#### k-Function
+![Map](Kfunctionresults.png)
 
 *Figure 9: k-function results
-### Interpolation?
+### Interpolation
+#### Inverse Weighted Distance
 ![Map](DensityPFwBC.png)
 
 *Figure 10: Density Points of Fires within British Columbia
@@ -1201,20 +1209,25 @@ We evaluated spatial distribution of fires, to determine if points are clustered
 *Figure 11: British Columbia Inverse Distance Weighting Interpolation Surface of Temperature
 
 ### Regression
+#### Least Squares Regression
 ![Map](BCRegression.png)
 *Figure 12: British Columbia Map of Residuals from Least Squares Regression Analysis
+#### Geographically Weighted Regression
 ![Map](LocalR2.png)
-*Figure 14: Map of Local R2 with Banwidth of 50 km for British Columbia
+*Figure 13: Map of Local R2 with Banwidth of 50 km for British Columbia
 ![Map](GWR.png)
-*Figure 15: Map of Geographically Weighted Regression Coefficients with 50km Bandwith in British Columbia
-
-
-Can say what they tables have, but don’t describe them specifically, everything needs a caption
-Like when its broken up the same as the methods-people reading it know what to expect
-Little text, good figures and tables-there to help you use less text
+*Figure 14: Map of Geographically Weighted Regression Coefficients with 50km Bandwith in British Columbia
 
 ## Discussion
-The NNDMean and NNDRandom  values from this test indicate that wildfire events in British Columbia are spatially clustered. This result shows strong evidence of significant clustering as indicated by the z-score of -65.2628 (see Figure 7). The quadrat analysis results indicate that wildfires have a clustered spatial distribution, with strong evidence that the clustering is statistically significant as indicated by the chi square value of 12866. 6506, which produces a p-value \< 0.0001 (see Figure 8). Please see the K-Function results for wildfire events in 2021 (Figure 9). They appear to be significantly spatially clustered at distances greater than 10,000 metres. 
+
+Describe results
+Overall, the results from this study show…..(ex, rainfall is poor predictor of variability of wildfire)
+-	Rest of what your writing backs up that statement
+Overrall summary
+
+## Results
+### Point Pattern Analysis
+The NNDMean and NNDRandom  values from this test indicate that wildfire events in British Columbia are spatially clustered. This result shows strong evidence of significant clustering as indicated by the z-score of -65.2628 (see Figure 7). The quadrat analysis results indicate that wildfires have a clustered spatial distribution, with strong evidence that the clustering is statistically significant as indicated by the chi square value of 12866. 6506, which produces a p-value \< 0.0001 (see Figure 8). Please see the K-Function results for wildfire events in 2021 (Figure 9). They appear to be significantly spatially clustered at distances greater than 10,000 metres.
 
 Describe results
 Overall, the results from this study show…..(ex, rainfall is poor predictor of variability of wildfire)
