@@ -19,22 +19,24 @@ Talk about BC fire history, how uch forested area, typical climate zone
 -	 Can run descriptive stats on events or climate data
 -	Put descriptive stats here
 -	Wildefire, temperature
+![Map](ClimateDataBCFigure1.png)
+*Figure 1: Map of Climate Data Points in British Columbia, Data Retrieved from PCDS.
 
 ![Map](TmMap.png)
-  Figure 1: *Map of BC Fire Locations in 2021 with the mean centre.*
+  Figure 2: *Map of BC Fire Locations in 2021 with the mean centre.*
 ![Map](Output_BarGraph_GG.png)
 
-  Figure 2: *Bar Graph of Total Burned Area by Month in British Columbia, 2021.*
+  Figure 3: *Bar Graph of Total Burned Area by Month in British Columbia, 2021.*
 ![Map](Output_Histogram.png)
 
-  Figure 3: *Histogram of Frequency of Wildfire Sizes in British Columbia, 2021.*
+  Figure 4: *Histogram of Frequency of Wildfire Sizes in British Columbia, 2021.*
 
 ![Map](CENTRALTENDENCIES.png)
 
-  Figure 4: *Table of Central Tendencies Fire Descriptive Statistics for British Columbia in 2021*
+  Figure 5: *Table of Central Tendencies Fire Descriptive Statistics for British Columbia in 2021*
 ![Map](RELATIVEPOSITION.png)
 
-Figure 5: *Table of Relative Position Fire Descriptive Statistics for British Columbia in 2021*
+Figure 6: *Table of Relative Position Fire Descriptive Statistics for British Columbia in 2021*
 
 ## Data Description
 Use formulas, 1-2 sentences about what these are-what and why
@@ -1028,33 +1030,30 @@ plot(envelope_k)
 ```
 
 ## Results
-![Map](ClimateDataBCFigure1.png)
-*Figure 1: Map of Climate Data Points in British Columbia, Data Retrieved from PCDS.
-
 ### Point Pattern Analysis:
-![Map]
+![Map](nnd_analysis_table.png)
 
-*Figure 3: Table of Nearest Neighbour Analysis Results
-![Map](.png)
+*Figure 7: Table of Nearest Neighbour Analysis Results
+![Map](quadrat_analysis_table.png)
 
-*Figure 3: Table of Quadrat Analysis Results
+*Figure 8: Table of Quadrat Analysis Results
 ![Map](Kfunctionresults.png)
 
-*Figure 3: k-function results
+*Figure 9: k-function results
 ### Interpolation?
 ![Map](DensityPFwBC.png)
 
-*Figure 2: Density Points of Fires within British Columbia
+*Figure 10: Density Points of Fires within British Columbia
 ![Map](BCIDWTemperature.png)
-*Figure 3: British Columbia Inverse Distance Weighting Interpolation Surface of Temperature
+*Figure 11: British Columbia Inverse Distance Weighting Interpolation Surface of Temperature
 
 ### Regression
 ![Map](BCRegression.png)
-*Figure 4: British Columbia Map of Residuals from Least Squares Regression Analysis
+*Figure 12: British Columbia Map of Residuals from Least Squares Regression Analysis
 ![Map](LocalR2.png)
-*Figure 3: Local R2 with Banwidth of 50 km for British Columbia
+*Figure 14: Map of Local R2 with Banwidth of 50 km for British Columbia
 ![Map](GWR.png)
-*Figure 3: Geographically Weighted Regression Coefficients with 50km Bandwith in British Columbia
+*Figure 15: Map of Geographically Weighted Regression Coefficients with 50km Bandwith in British Columbia
 
 
 Can say what they tables have, but don’t describe them specifically, everything needs a caption
