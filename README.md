@@ -13,9 +13,10 @@ The vast amount of factors influencing wildfires makes it challenging to underst
 
 ## Study Site
 
-British Columbia has 60 million hectares of forests and other natural vegetation types (i.e., grasslands, shrublands, and woodlands), and 76% of land is forerested are characteristics that have shaped the area’s social, cultural, and economic identity (Parisien et al., 2023) . BC’s forests have a full range of  of the moisture, from temperate rainforests to high-desert woodlands; approx. 15% are considered dry, 31% wet, and 54% mesic (Parisien et al., 2023). There is also a small percentage of grasslands  (1%) and shrublands (7.2–12.5%). 
+British Columbia has 60 million hectares of forests and other natural vegetation types (i.e., grasslands, shrublands, and woodlands), and 76% of land is forested are characteristics that have shaped the area’s social, cultural, and economic identity (Parisien et al., 2023). BC’s forests have a full range of moisture, from temperate rainforests to high-desert woodlands; approx. 15% are considered dry, 31% wet, and 54% mesic (Parisien et al., 2023). There is also a small percentage of grasslands  (1%) and shrublands (7.2–12.5%). 
 	Since the 1950s, the number and area burned of wildfires had been steadily decreasing in the province until  approximately 2000, due to a cooler and wetter climatic pattern mid-century. This makes the recent increase of wildfire activity surprising and concerning as the world witnessed some of the worst wildfire seasons to date in the last 7 years.  Specifically in 2021, The warmest temperature ever recorded north of the 45th parallel (49.6 °C) occurred in the small town of Lytton, BC, on June 29, 2021 (Parisien et al., 2023). The following day a fire destroyed most of the community in minutes. The link between temperature and wildfire is evident here, along with the stark impacts it has on rural communities. 
-	In our study, we take temperature data from 615 weather statations from the Pacific Climate DS and 2,959 fire events from the BC Data Catalogue Wildfire Incident Locations - Historical Dataset . Average temperature ranges are between 0 and 20 degrees C (Figure 1). The mean centre was congregated in the mid-south/east section of British Columbia, which coincides with the Interior zone,  which is home to numerous sensitive, alpine, and desert ecosystems that are extremely susceptible to wildfire (Figure 2), and most of the fires burned between Juny and July 2021 (Figure 3). There were many small-sized fires (ha) that burned in 2021, but few large-sized fires (ha) (Figure 4).
+### Descriptive Statistics	
+ In our study, we take temperature data from 615 weather stations from the Pacific Climate Impacts Consortium BC Station Data, and 2,959 fire events from the BC Data Catalogue Wildfire Incident Locations - Historical Dataset. Average temperature ranges are between 0 and 20 degrees C (Figure 1). The mean centre was congregated in the mid-south/east section of British Columbia, which coincides with the Interior zone,  which is home to numerous sensitive, alpine, and desert ecosystems that are extremely susceptible to wildfire (Figure 2), and most of the fires burned between Juny and July 2021 (Figure 3). There were many small-sized fires (ha) that burned in 2021, but few large-sized fires (ha) (Figure 4).
 
 ![Map](ClimateDataBCFigure1.png)
 *Figure 1: Map of Climate Data Points in British Columbia, Data Retrieved from PCDS.
@@ -36,6 +37,208 @@ British Columbia has 60 million hectares of forests and other natural vegetation
 
 Figure 6: *Table of Relative Position Fire Descriptive Statistics for British Columbia in 2021*
 
+You can see how the Descriptive Statistics for Wildfire in 2021 were calculated here:
+```r
+install.packages("terra")
+install.packages("lubridate")
+install.packages("e1071")
+install.packages("gridExtra")
+install.packages("gtable")
+install.packages("grid")
+install.packages("ggplot2")
+install.packages("dplyr")
+install.packages("bcmaps")
+install.packages("tmap")
+install.packages("sf")
+
+library("terra")
+library("lubridate")
+library("e1071")
+library("gtable")
+library("grid")
+library("gridExtra")
+library("ggplot2")
+library("dplyr")
+library("bcmaps")
+library("raster")
+library("maps")
+library("tmap")
+
+dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
+setwd(dir)
+getwd()
+
+# Load shapefile
+shp <- vect("./H_FIRE_PNT_point.shp")
+df <- as.data.frame(shp)
+
+# Filter for 2021 data
+df <- subset(df, df$FIRE_YEAR == 2021)
+
+# Inspect the format of the IGN_DATE column
+head(df$IGN_DATE)
+str(df$IGN_DATE)
+
+# Extract the date part (YYYYMMDD)
+df$IGN_DT <- as.Date(substr(df$IGN_DATE, 1, 8), format = "%Y%m%d")
+
+# Check if the conversion worked
+head(df$IGN_DT)
+range(df$IGN_DT, na.rm = TRUE)
+# Extract day of the year
+df$IGN_Day <- yday(df$IGN_DT)
+
+# Extract month as a labeled factor
+df$IGN_Month <- month(df$IGN_DT, label = TRUE, abbr = TRUE)
+
+# Check results
+head(df[, c("IGN_DATE", "IGN_DT", "IGN_Day", "IGN_Month")])
+
+
+# Create subsets for annual and summer (June 1 to August 31)
+df_year <- df
+df_Summer <- subset(df, IGN_Day >= 152 & IGN_Day <= 243)  # Adjusted day range
+# Filter summer data (June 1 - August 31)
+print(nrow(df_Summer))
+head(df_Summer)
+
+# Calculate descriptive statistics
+meanPop <- mean(df_year$SIZE_HA, na.rm = TRUE)
+meanSummer <- mean(df_Summer$SIZE_HA, na.rm = TRUE)
+sdPop <- sd(df_year$SIZE_HA, na.rm = TRUE)
+sdSummer <- sd(df_Summer$SIZE_HA, na.rm = TRUE)
+modePop <- as.numeric(names(sort(table(df_year$SIZE_HA), decreasing = TRUE))[1])
+modeSummer <- as.numeric(names(sort(table(df_Summer$SIZE_HA), decreasing = TRUE))[1])
+medPop <- median(df_year$SIZE_HA, na.rm = TRUE)
+medSummer <- median(df_Summer$SIZE_HA, na.rm = TRUE)
+skewPop <- skewness(df_year$SIZE_HA, na.rm = TRUE)
+skewSummer <- skewness(df_Summer$SIZE_HA, na.rm = TRUE)
+kurtPop <- kurtosis(df_year$SIZE_HA, na.rm = TRUE)
+kurtSummer <- kurtosis(df_Summer$SIZE_HA, na.rm = TRUE)
+CoVPop <- (sdPop / meanPop) * 100
+CoVSummer <- (sdSummer / meanSummer) * 100
+normPop_PVAL <- shapiro.test(df_year$SIZE_HA)$p.value
+normSummer_PVAL <- shapiro.test(df_Summer$SIZE_HA)$p.value
+
+samples = c("Population", "Summer") #Create an object for the labels
+
+means = c(meanPop, meanSummer) #Create an object for the means
+sd = c(sdPop, sdSummer) #Create an object for the standard deviations
+median = c(medPop, medSummer) #Create an object for the medians
+mode <- c(modePop, modeSummer) #Create an object for the modes
+skewness <- c(skewPop, skewSummer) #Create an object for the skewness
+kurtosis <- c(kurtPop, kurtSummer) #Create an object for the kurtosis
+CoV <- c(CoVPop, CoVSummer) #Create an object for the CoV
+normality <- c(normPop_PVAL, normSummer_PVAL) #Create an object for the normality PVALUE
+
+means <- round(means, 3)
+sd <- round(sd, 3)
+median <- round(median, 3)
+mode <- round(mode,3)
+skewness <- round(skewness,3)
+kurtosis <- round(kurtosis,3)
+CoV <- round(CoV, 3)
+normality <- round(normality, 5)
+
+data.for.table1 = data.frame(samples, means, sd, median, mode)
+data.for.table2 = data.frame(samples, skewness, kurtosis, CoV, normality)
+outCSV <- data.frame(samples, means, sd, median, mode, skewness, kurtosis, CoV, normality)
+write.csv(outCSV, "./FireDescriptiveStats_2021.csv", row.names = FALSE)
+
+table1 <- tableGrob(data.for.table1, rows = c("","")) #make a table "Graphical Object" (GrOb) 
+t1Caption <- textGrob("Fire Descriptive Statistics 2021 (Central Tendencies)", gp = gpar(fontsize = 09))
+padding <- unit(5, "mm")
+
+table1 <- gtable_add_rows(table1, 
+                          heights = grobHeight(t1Caption) + padding, 
+                          pos = 0)
+
+table1 <- gtable_add_grob(table1,
+                          t1Caption, t = 1, l = 2, r = ncol(data.for.table1) + 1)
+
+table2 <- tableGrob(data.for.table2, rows = c("",""))
+t2Caption <- textGrob("Fire Descriptive Statistics 2021 (Relative Position)", gp = gpar(fontsize = 09))
+padding <- unit(5, "mm")
+
+table2 <- gtable_add_rows(table2, 
+                          heights = grobHeight(t2Caption) + padding, 
+                          pos = 0)
+
+table2 <- gtable_add_grob(table2,
+                          t2Caption, t = 1, l = 2, r = ncol(data.for.table2) + 1)
+
+grid.arrange(table1, newpage = TRUE)
+grid.arrange(table2, newpage = TRUE)
+
+png("Output_Table1.png")
+grid.arrange(table1, newpage = TRUE)
+dev.off() 
+
+png("Output_Table2.png") 
+grid.arrange(table2, newpage = TRUE)
+dev.off()
+
+png("Output_Histogram.png")
+hist(df_year$SIZE_HA, breaks = 30, main = "Frequency of Wild Fire Sizes", xlab = "Size of Wild Fire (ha)", caption = "Figure 1: Wild Fire Size by month in 2021") #Base R style
+dev.off()
+
+barGraph <- df_year %>% #store graph in bar graph variable and pass data frame as first argument in next line
+  group_by(IGN_Month) %>% #use data frame and group by month and pass to first argument in next line
+  summarise(sumSize = sum(SIZE_HA, na.rm = TRUE)) %>% #sum up the total fire size for each month and pass to GGplot
+  ggplot(aes(x = IGN_Month, y = sumSize)) + #make new GGPLOT with summary as data and month and total fire size as x and y
+  geom_bar(stat = "identity") + #make bar chart with the Y values from the data (identity)
+  labs(title = "Total Burned Area by Month 2021", x = "Month", y = "Total Burned Area (ha)", caption = "Figure 3: Total Burned Area by month in 2021") + #label plot, x axis, y axis
+  theme_classic() + #set the theme to classic (removes background and borders etc.)
+  theme(plot.title = element_text(face = "bold", hjust = 0.5), plot.caption = element_text(hjust = 0.5)) #set title to center and bold
+barGraph
+
+png("Output_BarGraph_GG.png")
+barGraph
+dev.off()
+
+bc <- as_Spatial(bc_neighbours()) #Get shapefile of BC boundary
+raster::crs(bc)
+bc <- spTransform(bc, CRS("+init=epsg:4326")) #Project your data to WGS84 geographic (Lat/Long)
+bc <- bc[which(bc$name == "British Columbia" ),] #Extract just the BC province
+
+png("FirstMap.png")
+map(bc, fill = TRUE, col = "white", bg = "lightblue", ylim = c(40, 70)) #Make map of province
+points(df_year$LONGITUDE ,df_year$LATITUDE , col = "red", pch = 16) #Add fire points
+dev.off()
+
+coords <- df_year[, c("LONGITUDE", "LATITUDE")] #Store coordinates in new object
+crs <- CRS("+init=epsg:4326") #store the coordinate system (CRS) in a new object
+firePoints <- SpatialPointsDataFrame(coords = coords, data = df_year, proj4string = crs) #Make new spatial Points object using coodinates, data, and projection
+
+map_TM <- tm_shape(bc) + #make the main shape
+  tm_fill(col = "gray50") +  #fill polygons
+  tm_shape(firePoints) +
+  tm_symbols(col = "red", alpha = 0.3) +
+  tm_layout(title = "BC Fire Locations 2021", title.position = c("LEFT", "BOTTOM"))
+
+map_TM
+
+meanCenter <- data.frame(name = "Mean Center of fire points", long = mean(df_year$LONGITUDE), lat = mean(df_year$LATITUDE))
+
+coords2 <- meanCenter[, c("long", "lat")]
+crs2 <- CRS("+init=epsg:4326")
+meanCenterPoint <- SpatialPointsDataFrame(coords = coords2, data = meanCenter, proj4string = crs2)
+
+map_TM <- tm_shape(bc) + 
+  tm_fill(col = "gray50") +  
+  tm_shape(firePoints) +
+  tm_symbols(col = "red", alpha = 0.3) +
+  tm_shape(meanCenterPoint) +
+  tm_symbols(col = "blue", alpha = 0.8) +
+  tm_add_legend(type = "symbol", labels = c("Fire Points", "Mean Center"), col = c(adjustcolor( "red", alpha.f = 0.3), adjustcolor( "blue", alpha.f = 0.8)), shape = c(19,19)) +
+  tm_layout(title = "BC Fire Locations 2021", title.position = c("LEFT", "BOTTOM"), legend.position = c("RIGHT", "TOP"))
+
+map_TM
+
+png("TmMap.png")
+map_TM
+dev.off()
+```
 ## Data Description
 Our climate data was collected from the Pacific Climate Impacts Consortium BC Data Portal, where networks were selected for sufficient coverage of the Province. Data was collected from the BC Data Catalogue BC Wildfire Incident Locations - Historical Dataset. The year chosen to analyse was 2021, due to the extreme climate conditions, weather events, and destruction of communities that affected British Columbia drastically. This left us with 2959  fire event points, while analysing data from 615 weather stations across 4 Networks. As different networks have different naming conventions, a renaming process was employed to streamline data cleaning. For example, some columns were labeled “air_temperature” verus “air_temp”. We renamed all file and column names so that the air temperature data was able to be read effectively for each station across the province.  You can view the code for how this was conducted below. 
 
@@ -102,10 +305,160 @@ In this tutorial, we employ a robust statistical analysis to understand if tempe
 
 ### Point Pattern Analysis
 We evaluated spatial distribution of fires, to determine if points are clustered, dispersed, or random. We employ three methods to complete our point pattern analysis: Nearest Neighbour Analysis (NNA), Quadrat Analysis, and k-function. 
-##### Nearest Neighbour Analysis
-#### Quadrat Analysis
-#### k-Function
+```r
+## For this lab you will need the following libraries: 
 
+install.packages("spatstat")
+install.packages("sp")
+install.packages("st")
+install.packages("plyr")
+update.packages(ask = FALSE, checkBuilt = TRUE)
+
+library("sp")
+library("raster")
+library("tmap")
+library("knitr")
+library("sf")
+library("ggplot2")
+library("raster")
+library("tmap")
+library("plyr")
+library("dplyr")
+library("st")
+library("spatstat")
+
+#Set Working Directory
+
+dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
+setwd(dir)
+
+
+###PPA
+
+# Load and Clean Data
+bc_boundary <- st_read("bc_boundary.shp")
+event_data <- st_read("H_FIRE_PNT_point.shp")
+
+# Filter data for the year 2021
+filtered_fire_data_2021 <- event_data %>%
+  filter(FIRE_YEAR == 2021)
+
+# Check the filtered data
+head(filtered_fire_data_2021)
+
+# Ensure bbox2 is valid and formatted correctly
+bbox2 <- st_bbox(bc_boundary)
+
+
+# Check CRS of data before and after transformation
+st_crs(event_data)
+st_crs(bc_boundary)
+
+
+# Intersect Events with BC Boundary
+FilteredEvents <- st_intersection(filtered_fire_data_2021, bc_boundary)
+
+# Extract Coordinates for Point Pattern Analysis
+FilteredEvents$x <- st_coordinates(FilteredEvents)[,1]
+FilteredEvents$y <- st_coordinates(FilteredEvents)[,2]
+
+# Create Observation Window
+boundary_bbox <- as.matrix(st_bbox(bc_boundary))
+window <- as.owin(list(xrange = c(boundary_bbox[1], boundary_bbox[3]), yrange = c(boundary_bbox[2], boundary_bbox[4])))
+
+# Create PPP Object
+event.ppp <- ppp(x = FilteredEvents$x, y = FilteredEvents$y, window = window)
+
+# Visualization
+map <- tm_shape(bc_boundary) +
+  tm_polygons(col = "gray80", border.col = "black") +
+  tm_shape(FilteredEvents) +
+  tm_symbols(size = 0.05, col = "red", alpha = 0.5) +
+  tm_layout(title = "Fire Events in British Columbia, 2021", title.position = c("LEFT", "BOTTOM"))
+print(map)
+```
+##### Nearest Neighbour Analysis
+NNA uses the Nearest Neighbourhood Distance to understand how observations of interest are distributed across British Columbia (Zu, 2014, p. 14). We can compare the mean NND to another random NND to determine whether our pattern is clustered, dispersed, or random. When NND values are close to zero values are random. When the values are larger than 0 they are dispersed, and smaller than 0 they are clustered (Zu, 2014, p. 14). 
+The average nearest neighbour value for a spatially random distribution is calculated using the following equation:
+
+$$ 
+\bar{NND_R} = \frac{1}{2\sqrt{\text{Density}}} \\
+\bar{NND_D} = \frac{1.07453}{\sqrt{\text{Density}}}
+$$
+
+$$ 
+Z_n = \frac{\bar{NND} - \bar{NND_R}}{\sigma \bar{NND}}
+$$
+
+You can view the code to perform your Nearest Neighbour Analysis here:
+```r
+# Nearest Neighbour Analysis
+nearestNeighbour <- nndist(event.ppp)
+nearestNeighbour <- as.data.frame(as.numeric(nearestNeighbour))
+colnames(nearestNeighbour) <- "Distance"
+
+nnd <- mean(nearestNeighbour$Distance)
+studyArea <- area.owin(event.ppp$window)
+pointDensity <- nrow(nearestNeighbour) / studyArea
+r_nnd <- 1 / (2 * sqrt(pointDensity))
+d_nnd <- 1.07453 / sqrt(pointDensity)
+R <- nnd / r_nnd
+SE_NND <- 0.26136 / sqrt(nrow(nearestNeighbour) * pointDensity)
+z <- (nnd - r_nnd) / SE_NND
+
+nnd_results <- data.frame(StudyArea = studyArea, MeanNND = nnd, RandomNND = r_nnd, Z = z, R = R)
+print(nnd_results)
+```
+
+
+
+
+#### Quadrat Analysis
+
+The Quadrat function method determines the point distribution by examining its density over British Columbia. We can compare observed distributions with random patterns to assess whether our pattern is clustered, dispersed, or random (Oyana, 2021). The formula and the code for performing a quadrat analysis is listed below. 
+
+$$
+VAR = \frac{\Sigma f_ix_i^2 - [\frac{(\Sigma f_ix_i)^2}{m}]}{m-1}
+$$
+
+where the number of points per cell is x, where f is frequency, where m is the number of quadrats. 
+```r
+# Quadrat Analysis
+qcount <- quadratcount(event.ppp, nx = 10, ny = 10)
+qcount_df <- as.data.frame(qcount)
+qcount_df <- plyr::count(qcount_df, 'Freq')
+colnames(qcount_df) <- c("x", "f")
+
+sum_fx2 <- sum(qcount_df$f * (qcount_df$x^2))
+M <- sum(qcount_df$f)
+N <- sum(qcount_df$x * qcount_df$f)
+sum_fx_sq <- (sum(qcount_df$x * qcount_df$f))^2
+
+VAR <- (sum_fx2 - (sum_fx_sq / M)) / (M - 1)
+MEAN <- N / M
+VMR <- VAR / MEAN
+chi_square <- VMR * (M - 1)
+p <- 1 - pchisq(chi_square, M - 1)
+
+quadrat_results <- data.frame(Variance = VAR, Mean = MEAN, VMR = VMR, Chisquare = chi_square, Pvalue = p)
+print(quadrat_results)
+```
+#### Ripley's k-Function
+
+K-function explores a spatial pattern across a range of spatial events, rather than relying on distances to the closest events (Oyana, 2021). It is based on all interevent distances between observation points and summarised to fit the model that best suits the spatial pattern of British Columbia.
+
+The equation for this calculation is:
+
+$$
+K(d) = \lambda^{-1}E(N_d)
+$$
+
+```r
+# K-Function Analysis
+k <- Kest(event.ppp, correction = "Ripley")
+envelope_k <- envelope(event.ppp, Kest, nsim = 99)
+plot(envelope_k)
+```
 ### Interpolation
 #### Inverse Weighted Distance
 
@@ -114,12 +467,7 @@ We evaluated spatial distribution of fires, to determine if points are clustered
 #### Geographically Weighted Regression
 
 
-    * A Nearest Neighbour Analysis (NND) is a simple and popular approach to characterize spatial arrangement of points in a study area. It operates by measuring the distance between each point, and its nearest neighbour. All the distances are then summed together and divided by the number of points in a given study area. This gives us the average nearest neighbour distance (NND). We can compare our mean NND to another random NND in our dataset to conclude whether our pattern is clustered, random, or dispersed. When NND is close to 0, we conclude there is a random pattern. When it is larger than a random pattern, we conclude it is dispersed, and when it is smaller, we conclude it is a clustered pattern. This will help us answer one of our main research questions.
 
-The average nearest neighbour value for a spatially random distribution is calculated using the following equation:
-    \bar{NND_R} = \frac{1}{2\sqrt{Density}}
-\bar{NND_D} = \frac{1.07453}{\sqrt{Density}}
-Z_n = \frac{\bar{NND} - \bar{NND_R}}{\sigma\bar{NND}}
 
 A quadrat analysis is an alternative way of testing whether a spatial pattern is significantly different from a random spatial pattern. A study area is broken up into cells (quadrats) where we can analyse the variance of each cell. If there was no variance, it would mean that all points are evenly distributed across each cell. This is extremely unlikely to occur with our crime data, expected that we see larger variance throughout the cells. Variance is heavily influenced by the density of points, meaning the mean number of points in a cell. However, we can place our mean in the denominator in order to standardize our measurements and decrease the influence of density/points per cell. This allows us to calculate our variance-mean ratio (VMR). In a perfectly random distribution, VAR and MEAN are equal. This is like our mean NND being equal to mean NND for random distribution.
 
@@ -781,324 +1129,23 @@ ggplot(data = gwr_output_sf_fixed) +
 ggsave("gwr_coefficients_fixed_bandwidth.png", width = 10, height = 8, dpi = 300)
 ```
 ### Descriptive stats, PPA
-```r
-install.packages("terra")
-install.packages("lubridate")
-install.packages("e1071")
-install.packages("gridExtra")
-install.packages("gtable")
-install.packages("grid")
-install.packages("ggplot2")
-install.packages("dplyr")
-install.packages("bcmaps")
-install.packages("tmap")
-install.packages("sf")
 
-library("terra")
-library("lubridate")
-library("e1071")
-library("gtable")
-library("grid")
-library("gridExtra")
-library("ggplot2")
-library("dplyr")
-library("bcmaps")
-library("raster")
-library("maps")
-library("tmap")
-
-dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
-setwd(dir)
-getwd()
-
-# Load shapefile
-shp <- vect("./H_FIRE_PNT_point.shp")
-df <- as.data.frame(shp)
-
-# Filter for 2021 data
-df <- subset(df, df$FIRE_YEAR == 2021)
-
-# Inspect the format of the IGN_DATE column
-head(df$IGN_DATE)
-str(df$IGN_DATE)
-
-# Extract the date part (YYYYMMDD)
-df$IGN_DT <- as.Date(substr(df$IGN_DATE, 1, 8), format = "%Y%m%d")
-
-# Check if the conversion worked
-head(df$IGN_DT)
-range(df$IGN_DT, na.rm = TRUE)
-# Extract day of the year
-df$IGN_Day <- yday(df$IGN_DT)
-
-# Extract month as a labeled factor
-df$IGN_Month <- month(df$IGN_DT, label = TRUE, abbr = TRUE)
-
-# Check results
-head(df[, c("IGN_DATE", "IGN_DT", "IGN_Day", "IGN_Month")])
-
-
-# Create subsets for annual and summer (June 1 to August 31)
-df_year <- df
-df_Summer <- subset(df, IGN_Day >= 152 & IGN_Day <= 243)  # Adjusted day range
-# Filter summer data (June 1 - August 31)
-print(nrow(df_Summer))
-head(df_Summer)
-
-# Calculate descriptive statistics
-meanPop <- mean(df_year$SIZE_HA, na.rm = TRUE)
-meanSummer <- mean(df_Summer$SIZE_HA, na.rm = TRUE)
-sdPop <- sd(df_year$SIZE_HA, na.rm = TRUE)
-sdSummer <- sd(df_Summer$SIZE_HA, na.rm = TRUE)
-modePop <- as.numeric(names(sort(table(df_year$SIZE_HA), decreasing = TRUE))[1])
-modeSummer <- as.numeric(names(sort(table(df_Summer$SIZE_HA), decreasing = TRUE))[1])
-medPop <- median(df_year$SIZE_HA, na.rm = TRUE)
-medSummer <- median(df_Summer$SIZE_HA, na.rm = TRUE)
-skewPop <- skewness(df_year$SIZE_HA, na.rm = TRUE)
-skewSummer <- skewness(df_Summer$SIZE_HA, na.rm = TRUE)
-kurtPop <- kurtosis(df_year$SIZE_HA, na.rm = TRUE)
-kurtSummer <- kurtosis(df_Summer$SIZE_HA, na.rm = TRUE)
-CoVPop <- (sdPop / meanPop) * 100
-CoVSummer <- (sdSummer / meanSummer) * 100
-normPop_PVAL <- shapiro.test(df_year$SIZE_HA)$p.value
-normSummer_PVAL <- shapiro.test(df_Summer$SIZE_HA)$p.value
-
-samples = c("Population", "Summer") #Create an object for the labels
-
-means = c(meanPop, meanSummer) #Create an object for the means
-sd = c(sdPop, sdSummer) #Create an object for the standard deviations
-median = c(medPop, medSummer) #Create an object for the medians
-mode <- c(modePop, modeSummer) #Create an object for the modes
-skewness <- c(skewPop, skewSummer) #Create an object for the skewness
-kurtosis <- c(kurtPop, kurtSummer) #Create an object for the kurtosis
-CoV <- c(CoVPop, CoVSummer) #Create an object for the CoV
-normality <- c(normPop_PVAL, normSummer_PVAL) #Create an object for the normality PVALUE
-
-means <- round(means, 3)
-sd <- round(sd, 3)
-median <- round(median, 3)
-mode <- round(mode,3)
-skewness <- round(skewness,3)
-kurtosis <- round(kurtosis,3)
-CoV <- round(CoV, 3)
-normality <- round(normality, 5)
-
-data.for.table1 = data.frame(samples, means, sd, median, mode)
-data.for.table2 = data.frame(samples, skewness, kurtosis, CoV, normality)
-outCSV <- data.frame(samples, means, sd, median, mode, skewness, kurtosis, CoV, normality)
-write.csv(outCSV, "./FireDescriptiveStats_2021.csv", row.names = FALSE)
-
-table1 <- tableGrob(data.for.table1, rows = c("","")) #make a table "Graphical Object" (GrOb) 
-t1Caption <- textGrob("Fire Descriptive Statistics 2021 (Central Tendencies)", gp = gpar(fontsize = 09))
-padding <- unit(5, "mm")
-
-table1 <- gtable_add_rows(table1, 
-                          heights = grobHeight(t1Caption) + padding, 
-                          pos = 0)
-
-table1 <- gtable_add_grob(table1,
-                          t1Caption, t = 1, l = 2, r = ncol(data.for.table1) + 1)
-
-table2 <- tableGrob(data.for.table2, rows = c("",""))
-t2Caption <- textGrob("Fire Descriptive Statistics 2021 (Relative Position)", gp = gpar(fontsize = 09))
-padding <- unit(5, "mm")
-
-table2 <- gtable_add_rows(table2, 
-                          heights = grobHeight(t2Caption) + padding, 
-                          pos = 0)
-
-table2 <- gtable_add_grob(table2,
-                          t2Caption, t = 1, l = 2, r = ncol(data.for.table2) + 1)
-
-grid.arrange(table1, newpage = TRUE)
-grid.arrange(table2, newpage = TRUE)
-
-png("Output_Table1.png")
-grid.arrange(table1, newpage = TRUE)
-dev.off() 
-
-png("Output_Table2.png") 
-grid.arrange(table2, newpage = TRUE)
-dev.off()
-
-png("Output_Histogram.png")
-hist(df_year$SIZE_HA, breaks = 30, main = "Frequency of Wild Fire Sizes", xlab = "Size of Wild Fire (ha)", caption = "Figure 1: Wild Fire Size by month in 2021") #Base R style
-dev.off()
-
-barGraph <- df_year %>% #store graph in bar graph variable and pass data frame as first argument in next line
-  group_by(IGN_Month) %>% #use data frame and group by month and pass to first argument in next line
-  summarise(sumSize = sum(SIZE_HA, na.rm = TRUE)) %>% #sum up the total fire size for each month and pass to GGplot
-  ggplot(aes(x = IGN_Month, y = sumSize)) + #make new GGPLOT with summary as data and month and total fire size as x and y
-  geom_bar(stat = "identity") + #make bar chart with the Y values from the data (identity)
-  labs(title = "Total Burned Area by Month 2021", x = "Month", y = "Total Burned Area (ha)", caption = "Figure 3: Total Burned Area by month in 2021") + #label plot, x axis, y axis
-  theme_classic() + #set the theme to classic (removes background and borders etc.)
-  theme(plot.title = element_text(face = "bold", hjust = 0.5), plot.caption = element_text(hjust = 0.5)) #set title to center and bold
-barGraph
-
-png("Output_BarGraph_GG.png")
-barGraph
-dev.off()
-
-bc <- as_Spatial(bc_neighbours()) #Get shapefile of BC boundary
-raster::crs(bc)
-bc <- spTransform(bc, CRS("+init=epsg:4326")) #Project your data to WGS84 geographic (Lat/Long)
-bc <- bc[which(bc$name == "British Columbia" ),] #Extract just the BC province
-
-png("FirstMap.png")
-map(bc, fill = TRUE, col = "white", bg = "lightblue", ylim = c(40, 70)) #Make map of province
-points(df_year$LONGITUDE ,df_year$LATITUDE , col = "red", pch = 16) #Add fire points
-dev.off()
-
-coords <- df_year[, c("LONGITUDE", "LATITUDE")] #Store coordinates in new object
-crs <- CRS("+init=epsg:4326") #store the coordinate system (CRS) in a new object
-firePoints <- SpatialPointsDataFrame(coords = coords, data = df_year, proj4string = crs) #Make new spatial Points object using coodinates, data, and projection
-
-map_TM <- tm_shape(bc) + #make the main shape
-  tm_fill(col = "gray50") +  #fill polygons
-  tm_shape(firePoints) +
-  tm_symbols(col = "red", alpha = 0.3) +
-  tm_layout(title = "BC Fire Locations 2021", title.position = c("LEFT", "BOTTOM"))
-
-map_TM
-
-meanCenter <- data.frame(name = "Mean Center of fire points", long = mean(df_year$LONGITUDE), lat = mean(df_year$LATITUDE))
-
-coords2 <- meanCenter[, c("long", "lat")]
-crs2 <- CRS("+init=epsg:4326")
-meanCenterPoint <- SpatialPointsDataFrame(coords = coords2, data = meanCenter, proj4string = crs2)
-
-map_TM <- tm_shape(bc) + 
-  tm_fill(col = "gray50") +  
-  tm_shape(firePoints) +
-  tm_symbols(col = "red", alpha = 0.3) +
-  tm_shape(meanCenterPoint) +
-  tm_symbols(col = "blue", alpha = 0.8) +
-  tm_add_legend(type = "symbol", labels = c("Fire Points", "Mean Center"), col = c(adjustcolor( "red", alpha.f = 0.3), adjustcolor( "blue", alpha.f = 0.8)), shape = c(19,19)) +
-  tm_layout(title = "BC Fire Locations 2021", title.position = c("LEFT", "BOTTOM"), legend.position = c("RIGHT", "TOP"))
-
-map_TM
-
-png("TmMap.png")
-map_TM
-dev.off()
-```
 ### PPA
-```r
-## For this lab you will need the following libraries: 
 
-install.packages("spatstat")
-install.packages("sp")
-install.packages("st")
-install.packages("plyr")
-update.packages(ask = FALSE, checkBuilt = TRUE)
-
-library("sp")
-library("raster")
-library("tmap")
-library("knitr")
-library("sf")
-library("ggplot2")
-library("raster")
-library("tmap")
-library("plyr")
-library("dplyr")
-library("st")
-library("spatstat")
-
-#Set Working Directory
-
-dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
-setwd(dir)
-
-
-###PPA
-
-# Load and Clean Data
-bc_boundary <- st_read("bc_boundary.shp")
-event_data <- st_read("H_FIRE_PNT_point.shp")
-
-# Filter data for the year 2021
-filtered_fire_data_2021 <- event_data %>%
-  filter(FIRE_YEAR == 2021)
-
-# Check the filtered data
-head(filtered_fire_data_2021)
-
-# Ensure bbox2 is valid and formatted correctly
-bbox2 <- st_bbox(bc_boundary)
-
-
-# Check CRS of data before and after transformation
-st_crs(event_data)
-st_crs(bc_boundary)
-
-
-# Intersect Events with BC Boundary
-FilteredEvents <- st_intersection(filtered_fire_data_2021, bc_boundary)
-
-# Extract Coordinates for Point Pattern Analysis
-FilteredEvents$x <- st_coordinates(FilteredEvents)[,1]
-FilteredEvents$y <- st_coordinates(FilteredEvents)[,2]
-
-# Create Observation Window
-boundary_bbox <- as.matrix(st_bbox(bc_boundary))
-window <- as.owin(list(xrange = c(boundary_bbox[1], boundary_bbox[3]), yrange = c(boundary_bbox[2], boundary_bbox[4])))
-
-# Create PPP Object
-event.ppp <- ppp(x = FilteredEvents$x, y = FilteredEvents$y, window = window)
-
-# Visualization
-map <- tm_shape(bc_boundary) +
-  tm_polygons(col = "gray80", border.col = "black") +
-  tm_shape(FilteredEvents) +
-  tm_symbols(size = 0.05, col = "red", alpha = 0.5) +
-  tm_layout(title = "Fire Events in British Columbia, 2021", title.position = c("LEFT", "BOTTOM"))
-print(map)
-
-# Nearest Neighbour Analysis
-nearestNeighbour <- nndist(event.ppp)
-nearestNeighbour <- as.data.frame(as.numeric(nearestNeighbour))
-colnames(nearestNeighbour) <- "Distance"
-
-nnd <- mean(nearestNeighbour$Distance)
-studyArea <- area.owin(event.ppp$window)
-pointDensity <- nrow(nearestNeighbour) / studyArea
-r_nnd <- 1 / (2 * sqrt(pointDensity))
-d_nnd <- 1.07453 / sqrt(pointDensity)
-R <- nnd / r_nnd
-SE_NND <- 0.26136 / sqrt(nrow(nearestNeighbour) * pointDensity)
-z <- (nnd - r_nnd) / SE_NND
-
-nnd_results <- data.frame(StudyArea = studyArea, MeanNND = nnd, RandomNND = r_nnd, Z = z, R = R)
-print(nnd_results)
-
-# Quadrat Analysis
-qcount <- quadratcount(event.ppp, nx = 10, ny = 10)
-qcount_df <- as.data.frame(qcount)
-qcount_df <- plyr::count(qcount_df, 'Freq')
-colnames(qcount_df) <- c("x", "f")
-
-sum_fx2 <- sum(qcount_df$f * (qcount_df$x^2))
-M <- sum(qcount_df$f)
-N <- sum(qcount_df$x * qcount_df$f)
-sum_fx_sq <- (sum(qcount_df$x * qcount_df$f))^2
-
-VAR <- (sum_fx2 - (sum_fx_sq / M)) / (M - 1)
-MEAN <- N / M
-VMR <- VAR / MEAN
-chi_square <- VMR * (M - 1)
-p <- 1 - pchisq(chi_square, M - 1)
-
-quadrat_results <- data.frame(Variance = VAR, Mean = MEAN, VMR = VMR, Chisquare = chi_square, Pvalue = p)
-print(quadrat_results)
-
-# K-Function Analysis
-k <- Kest(event.ppp, correction = "Ripley")
-envelope_k <- envelope(event.ppp, Kest, nsim = 99)
-plot(envelope_k)
-```
 
 ## Results
+### Point Pattern Analysis
+We evaluated spatial distribution of fires, to determine if points are clustered, dispersed, or random. We employ three methods to complete our point pattern analysis: Nearest Neighbour Analysis (NNA), Quadrat Analysis, and k-function. 
+##### Nearest Neighbour Analysis
+#### Quadrat Analysis
+#### k-Function
+
+### Interpolation
+#### Inverse Weighted Distance
+
+### Regression
+#### Least Squares Regression
+#### Geographically Weighted Regression
 ### Point Pattern Analysis:
 ![Map](nnd_analysis_table.png)
 
