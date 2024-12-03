@@ -20,6 +20,23 @@ Talk about BC fire history, how uch forested area, typical climate zone
 -	Put descriptive stats here
 -	Wildefire, temperature
 
+![Map](TmMap.png)
+  Figure: Map of BC Fire Locations in 2021 with the mean centre.
+![Map](Output_BarGraph_GG.png)
+
+  Figure:Bar Graph of Total Burned Area by Month in British Columbia, 2021.
+![Map](Output_Histogram.png)
+
+  Figure: Histogram of Frequency of Wildfire Sizes in British Columbia, 2021.
+
+![Map](CENTRALTENDENCIES.png)
+
+Figure 1: Central Tendencies Fire Descriptive Statistics for British Columbia in 2021
+Use formulas, 1-2 sentences about what these are-what and why
+
+![Map](RELATIVEPOSITION.png)
+Figure 2: Relative Position Fire Descriptive Statistics for British Columbia in 2021
+
 ## Data Description
 
 Task 6: Provide one sentence for each question above.
@@ -894,14 +911,122 @@ png("TmMap.png")
 map_TM
 dev.off()
 ```
+### PPA
+```r
+## For this lab you will need the following libraries: 
 
-![Map](CENTRALTENDENCIES.png)
+install.packages("spatstat")
+install.packages("sp")
+install.packages("st")
+install.packages("plyr")
+update.packages(ask = FALSE, checkBuilt = TRUE)
 
-Figure 1: Central Tendencies Fire Descriptive Statistics for British Columbia in 2021
-Use formulas, 1-2 sentences about what these are-what and why
+library("sp")
+library("raster")
+library("tmap")
+library("knitr")
+library("sf")
+library("ggplot2")
+library("raster")
+library("tmap")
+library("plyr")
+library("dplyr")
+library("st")
+library("spatstat")
 
-![Map](RELATIVEPOSITION.png)
-Figure 2: Relative Position Fire Descriptive Statistics for British Columbia in 2021
+#Set Working Directory
+
+dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
+setwd(dir)
+
+
+###PPA
+
+# Load and Clean Data
+bc_boundary <- st_read("bc_boundary.shp")
+event_data <- st_read("H_FIRE_PNT_point.shp")
+
+# Filter data for the year 2021
+filtered_fire_data_2021 <- event_data %>%
+  filter(FIRE_YEAR == 2021)
+
+# Check the filtered data
+head(filtered_fire_data_2021)
+
+# Ensure bbox2 is valid and formatted correctly
+bbox2 <- st_bbox(bc_boundary)
+
+
+# Check CRS of data before and after transformation
+st_crs(event_data)
+st_crs(bc_boundary)
+
+
+# Intersect Events with BC Boundary
+FilteredEvents <- st_intersection(filtered_fire_data_2021, bc_boundary)
+
+# Extract Coordinates for Point Pattern Analysis
+FilteredEvents$x <- st_coordinates(FilteredEvents)[,1]
+FilteredEvents$y <- st_coordinates(FilteredEvents)[,2]
+
+# Create Observation Window
+boundary_bbox <- as.matrix(st_bbox(bc_boundary))
+window <- as.owin(list(xrange = c(boundary_bbox[1], boundary_bbox[3]), yrange = c(boundary_bbox[2], boundary_bbox[4])))
+
+# Create PPP Object
+event.ppp <- ppp(x = FilteredEvents$x, y = FilteredEvents$y, window = window)
+
+# Visualization
+map <- tm_shape(bc_boundary) +
+  tm_polygons(col = "gray80", border.col = "black") +
+  tm_shape(FilteredEvents) +
+  tm_symbols(size = 0.05, col = "red", alpha = 0.5) +
+  tm_layout(title = "Fire Events in British Columbia, 2021", title.position = c("LEFT", "BOTTOM"))
+print(map)
+
+# Nearest Neighbour Analysis
+nearestNeighbour <- nndist(event.ppp)
+nearestNeighbour <- as.data.frame(as.numeric(nearestNeighbour))
+colnames(nearestNeighbour) <- "Distance"
+
+nnd <- mean(nearestNeighbour$Distance)
+studyArea <- area.owin(event.ppp$window)
+pointDensity <- nrow(nearestNeighbour) / studyArea
+r_nnd <- 1 / (2 * sqrt(pointDensity))
+d_nnd <- 1.07453 / sqrt(pointDensity)
+R <- nnd / r_nnd
+SE_NND <- 0.26136 / sqrt(nrow(nearestNeighbour) * pointDensity)
+z <- (nnd - r_nnd) / SE_NND
+
+nnd_results <- data.frame(StudyArea = studyArea, MeanNND = nnd, RandomNND = r_nnd, Z = z, R = R)
+print(nnd_results)
+
+# Quadrat Analysis
+qcount <- quadratcount(event.ppp, nx = 10, ny = 10)
+qcount_df <- as.data.frame(qcount)
+qcount_df <- plyr::count(qcount_df, 'Freq')
+colnames(qcount_df) <- c("x", "f")
+
+sum_fx2 <- sum(qcount_df$f * (qcount_df$x^2))
+M <- sum(qcount_df$f)
+N <- sum(qcount_df$x * qcount_df$f)
+sum_fx_sq <- (sum(qcount_df$x * qcount_df$f))^2
+
+VAR <- (sum_fx2 - (sum_fx_sq / M)) / (M - 1)
+MEAN <- N / M
+VMR <- VAR / MEAN
+chi_square <- VMR * (M - 1)
+p <- 1 - pchisq(chi_square, M - 1)
+
+quadrat_results <- data.frame(Variance = VAR, Mean = MEAN, VMR = VMR, Chisquare = chi_square, Pvalue = p)
+print(quadrat_results)
+
+# K-Function Analysis
+k <- Kest(event.ppp, correction = "Ripley")
+envelope_k <- envelope(event.ppp, Kest, nsim = 99)
+plot(envelope_k)
+```
+
 ## Results
 ![Map](ClimateDataBCFigure1.png)
 *Figure 1: Map of Climate Data Points in British Columbia, Data Retrieved from PCDS.
