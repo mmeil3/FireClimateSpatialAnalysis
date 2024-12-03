@@ -1207,7 +1207,8 @@ We evaluated spatial distribution of fires, to determine if points are clustered
 *Figure 10: Density Points of Fires within British Columbia
 ![Map](BCIDWTemperature.png)
 *Figure 11: British Columbia Inverse Distance Weighting Interpolation Surface of Temperature
-
+![Map](semivariance.png)
+Figure 12: Semivariogram Model
 ### Regression
 #### Least Squares Regression
 ![Map](BCRegression.png)
