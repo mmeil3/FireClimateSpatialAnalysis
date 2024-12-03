@@ -572,7 +572,16 @@ ggsave("Clipped_IDW_Interpolation_Map.png", width = 10, height = 8, dpi = 300)
 
 ```
 ### Regression
+
+Regression analysis generates coefficients that represent the slope and intercept of a line that best fits the observed data points (Oyana, 2021, p. 148). The relationship is confirmed when (1) when there is a tendency for the dependent(or response)  variable,  Y,  to  vary  with  an  independent  (or  predictor)  variable,  X, in a systematic fashion and (2) when there is a well-defined scattering of data points around the curve that depicts some type of model direction. Linear regression can also be used to predict variable values, estimate unknown values given the values of another. It is best to take a two-tiered approach that involves Least Squares Regression  (LSR) and Geographically Weighted Regression (GWR) (Oyana, 2021, 149). 
+
 #### Least Squares Regression
+Least Squares Regression modelling helps identify important predictors that may explain the spatial processes in a given area, while taking into consideration the residuals (errors). For the purposes of our project, LSR would help us understand how temperature can predict wildfire in British Columbia. The residuals are then tested in the model and are randomly distributed (Oyana, 2021, p. 149). A simple regression model can be written as follows:
+
+$$
+Y = a + bX
+$$ 
+
 ```r
 # Read the shapefile
 final_data_sf <- st_read("final_data.shp")
@@ -604,6 +613,31 @@ ggsave("residuals_map.png", width = 10, height = 8, dpi = 300)
 
 ```
 #### Geographically Weighted Regression
+If the LSR model revealed evidence of spatial autocorrelation in the dependent variable, we can proceed with fitting a GWR model. This regression analysis enablesthe computation of raw and standardized regression coefficients and the standardized residuals to differentiate local spatial variations (Oyana, 2021, p. 150). GWR allows us to quantify how temperature influences wildfire density in British Columbia using these coefficients and residuals. 
+
+$$
+Y_{uv} = \alpha + \beta_1 X_{uv} + \beta_2 E_{uv} + \beta_3 A_{uv} + \epsilon_{uv}
+$$
+
+Where:
+- \( Y_{uv} \) is the dependent variable (for example, wildfire occurrence or intensity).
+- \( X_{uv}, E_{uv}, A_{uv} \) are independent variables (for example, temperature, elevation, and area).
+- \( \alpha \) is the intercept.
+- \( \beta_1, \beta_2, \beta_3 \) are the coefficients for the independent variables.
+- \( \epsilon_{uv} \) represents the error term.
+
+The main assumptions of a traditional regression model are as follows from Oyana et al.:
+
+1. The dependent variable is a linear function of a specific set of independent variables, plus an error term. This highlights the importance of linearity and the correct specification of the model. In a bivariate model, this is represented as \( Y = \beta_0 + \beta_1X + \epsilon \).
+
+2. The errors (or residuals) must have a zero mean and constant variance, which implies the assumption of homoscedasticity.
+
+3. The errors must be independent, meaning the value of one error does not influence the value of another error. This assumes no autocorrelation, either spatially or temporally.
+
+4. For each value of \( X \), the errors are expected to be normally distributed around the regression line, which reflects the assumption of normality.
+
+5. There should be no strong or perfect linear relationships between the independent variables. This implies the assumption of no multicollinearity, meaning the independent variables should not be highly correlated with each other.
+
 
 ```r
 install.packages("spgwr")
