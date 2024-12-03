@@ -98,19 +98,22 @@ for (file in csv_files) {
 ```
 
 ## Methods
-Task 7: Provide a list of the different methods you employed. This should in chronological order. You need only to list the names of the methods. This will be the blueprint for your methods section when you write your paper for the assignment.
-Evaluationg Spatial distribution of fires-determine if significantly different or random
-	-conducted test in NND analysis, why we did it, quadrat analysis, kernel density estimator
-Creating temperature surface…or creating wildefire/temperature surfaces
-- temperature data exists as point data, conduct analysis crate interpolatied surface, using IDW and or Kriging-have density surface for wildfires-can describe this
-Did this using regression analysis, determine if residuals are clustered, apply globl morans I, from those results want to see if theres local variability in coefficients in the model , so we also apply GWR
+In this tutorial, we employ a robust statistical analysis to understand if temperature helps explain the occurrence of wildfire. Our methods are broken up into Point Pattern Analysis, Interpolation, and Regression.
 
-Thinkn of it as themes other than whole sections of methods
+### Point Pattern Analysis
+We evaluated spatial distribution of fires, to determine if points are clustered, dispersed, or random. We employ three methods to complete our point pattern analysis: Nearest Neighbour Analysis (NNA), Quadrat Analysis, and k-function. 
+##### Nearest Neighbour Analysis
+#### Quadrat Analysis
+#### k-Function
 
-*don’t need methods for descriptive stats
-*  PPA, interpolation, regression
-* Cleaning Climate Data
-    * Renaming
+### Interpolation
+#### Inverse Weighted Distance
+
+### Regression
+#### Least Squares Regression
+#### Geographically Weighted Regression
+
+
     * A Nearest Neighbour Analysis (NND) is a simple and popular approach to characterize spatial arrangement of points in a study area. It operates by measuring the distance between each point, and its nearest neighbour. All the distances are then summed together and divided by the number of points in a given study area. This gives us the average nearest neighbour distance (NND). We can compare our mean NND to another random NND in our dataset to conclude whether our pattern is clustered, random, or dispersed. When NND is close to 0, we conclude there is a random pattern. When it is larger than a random pattern, we conclude it is dispersed, and when it is smaller, we conclude it is a clustered pattern. This will help us answer one of our main research questions.
 
 The average nearest neighbour value for a spatially random distribution is calculated using the following equation:
