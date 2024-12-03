@@ -4,21 +4,19 @@
 Introduction
 
 ## Context
---	World is on fire, set tone for problem and overall topic, then go more specific from there
--	The British Columbia wildfire situation has experienced a significant rise in frequency and intensity in recent years. Four of the most severe wildfire seasons have occurred in the past 7 years: 2017, 2018, 2021, 2023 (Parisien et al., 2023). This has been primarily linked to climate change, as increased temperatures in the summer and irregular precipitation events increase, along with a lack of traditional management practices (Parisien et al., Blackwell et al., 2005).
+
+	Wildfire has been the primary natural disturbance in the majority of British Columbia’s forests, and is predicted to be an increasing disturbance due to climate change (Zu, 2014). Four of the most severe wildfire seasons of the century have occurred in the past seven years: 2017, 2018, 2021, 2023 (Parisien et al., 2023). Factors such as temperature, precipitation, vegetation (mountain pine beetle outbreaks), timber harvest, soil condition, outdoor activities, and lack of traditional management practices all have significant impacts on wildfire (Stahl et al. 2006). While wildfires have significant effects on the landscape ecology, people living within British Columbia’s borders suffer from adverse health impacts from smoke, anxiety, and loss of neighborhood unity (Butry et al. 2001; Kochi et al. 2010).
+
 
 ## Identifying the Problem
--	Temperature is an important climate factor in indicating the severity of wildefire-but is not necessarily understand
--	In this statistical analysis, we clean 750 weather stations across the province of British Columbia and take fire point data in order to understand the link between Temperature and Wildfire in British Columbia? Are events clustered/dispersed?
--	-historical data, 
--	After question, set up the rest of your paper
+The vast amount of factors influencing wildfires makes it challenging to understand why wildfires occur (Zu, 2014). Temperature has been used as an effective and significant factor in future wildfire occurrence modelling, with higher accuracy than precipitation (Zu, 2014).  In this statistical analysis, we take temperature data across the province of British Columbia, along with fire data for the year 2021 to ask: Can temperature explain wildfire occurence in British Columbia? Are these events clustered or dispersed?
 
 ## Study Site
-Talk about BC fire history, how uch forested area, typical climate zone
--	Talk about the descriptive stats to help describe your study site-use stats how you want throughout, may want to describe PPA a bit, NND/or quadrat analysis, 1st and 2nd order processes, and if your using one or the other, why are you using your method
--	 Can run descriptive stats on events or climate data
--	Put descriptive stats here
--	Wildefire, temperature
+
+British Columbia has 60 million hectares of forests and other natural vegetation types (i.e., grasslands, shrublands, and woodlands), and 76% of land is forerested are characteristics that have shaped the area’s social, cultural, and economic identity (Parisien et al., 2023) . BC’s forests have a full range of  of the moisture, from temperate rainforests to high-desert woodlands; approx. 15% are considered dry, 31% wet, and 54% mesic (Parisien et al., 2023). There is also a small percentage of grasslands  (1%) and shrublands (7.2–12.5%). 
+	Since the 1950s, the number and area burned of wildfires had been steadily decreasing in the province until  approximately 2000, due to a cooler and wetter climatic pattern mid-century. This makes the recent increase of wildfire activity surprising and concerning as the world witnessed some of the worst wildfire seasons to date in the last 7 years.  Specifically in 2021, The warmest temperature ever recorded north of the 45th parallel (49.6 °C) occurred in the small town of Lytton, BC, on June 29, 2021 (Parisien et al., 2023). The following day a fire destroyed most of the community in minutes. The link between temperature and wildfire is evident here, along with the stark impacts it has on rural communities. 
+	In our study, we take temperature data from 615 weather statations from the Pacific Climate DS and 2,959 fire events from the BC Data Catalogue Wildfire Incident Locations - Historical Dataset . Average temperature ranges are between 0 and 20 degrees C (Figure 1). The mean centre was congregated in the mid-south/east section of British Columbia, which coincides with the Interior zone,  which is home to numerous sensitive, alpine, and desert ecosystems that are extremely susceptible to wildfire (Figure 2), and most of the fires burned between Juny and July 2021 (Figure 3). There were many small-sized fires (ha) that burned in 2021, but few large-sized fires (ha) (Figure 4).
+
 ![Map](ClimateDataBCFigure1.png)
 *Figure 1: Map of Climate Data Points in British Columbia, Data Retrieved from PCDS.
 
@@ -39,14 +37,65 @@ Talk about BC fire history, how uch forested area, typical climate zone
 Figure 6: *Table of Relative Position Fire Descriptive Statistics for British Columbia in 2021*
 
 ## Data Description
-Use formulas, 1-2 sentences about what these are-what and why
+Our climate data was collected from the Pacific Climate Impacts Consortium BC Data Portal, where networks were selected for sufficient coverage of the Province. Data was collected from the BC Data Catalogue BC Wildfire Incident Locations - Historical Dataset. The year chosen to analyse was 2021, due to the extreme climate conditions, weather events, and destruction of communities that affected British Columbia drastically. This left us with 2959  fire event points, while analysing data from 615 weather stations across 4 Networks. As different networks have different naming conventions, a renaming process was employed to streamline data cleaning. For example, some columns were labeled “air_temperature” verus “air_temp”. We renamed all file and column names so that the air temperature data was able to be read effectively for each station across the province.  You can view the code for how this was conducted below. 
 
-Task 6: Provide one sentence for each question above.
--	Where did you collect data? PCDS
--	Whenwas it collected? 2021
--	Format data
--	What cleaning you did-took full coverage of BC, 7 stations
+```r
+#********
+# Load necessary libraries
+library(dplyr)
 
+# Specify the directory containing your CSV files
+file_directory <- "C://Users/micha/Documents/GEOG 418/Final Project"
+# List all CSV files in the directory and its subdirectories
+#List all CSV files in directory and subdirectories
+csv_files_rename<-list.files(path ="/Users/micha/Documents/GEOG 418/Final Project/pics_data",
+                      pattern = "\\.csv$",  #Match only CSV files
+                      full.names = TRUE, #Return full file paths
+                      recursive = TRUE, #Search in subdirectories
+                      ignore.case = TRUE) #Case-insensitive matching
+
+# Step 2: Process each file
+for (file in csv_files) {
+  
+  # Read the file without header (header = FALSE) to capture all rows
+  df <- read.csv(file, header = FALSE, fill = TRUE)
+  
+  # Step 3: Assign the second row (index 2) as the column names
+  colnames(df) <- df[2, ]
+  
+  # Step 5: Clean column names by trimming any extra spaces
+  colnames(df) <- trimws(colnames(df))
+  
+  # Step 6: Rename columns that match variations of AirTemp
+  # List possible variations of the column name
+  column_variations <- c("air_temp", "air_temperature")
+  
+  # Loop through each variation and rename to 'AirTemp'
+  for (var in column_variations) {
+    if (var %in% colnames(df)) {
+      colnames(df)[colnames(df) == var] <- "AirTemp"
+      message("Renamed column '", var, "' to 'AirTemp' in file: ", basename(file))
+    }
+  }
+  
+  # Step 7: Save the cleaned data frame to a new file to avoid overwriting
+  # Generate a new filename to avoid overwriting
+  target_folder <- "C:/Users/micha/Documents/GEOG 418/Final Project/pcds_rename"
+
+  new_file_name <- paste0(tools::file_path_sans_ext(basename(file)), "_processed.csv") #put in file i want it to save to
+  
+  
+  # Create the full path to save the new file in the target folder
+  new_file_path <- file.path(target_folder, new_file_name)
+  
+  # Step 8: Save the cleaned data frame to a new file
+  write.csv(df, new_file_path, row.names = FALSE)
+  
+  # Optionally, print a message to confirm the file has been saved
+  message("Processed file saved as: ", new_file_path)
+}
+
+```
 
 ## Methods
 Task 7: Provide a list of the different methods you employed. This should in chronological order. You need only to list the names of the methods. This will be the blueprint for your methods section when you write your paper for the assignment.
