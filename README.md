@@ -1,4 +1,4 @@
-### Exploring Relationships between British Columbia's Climate and Fire Events in 2021: A Statistical Analysis
+### Point Pattern Analysis, Autocorrelation, and Regression: Exploring Relationships between British Columbia's Climate and Fire Events in 2021
 #### Michaela Meil: Advanced Spatial Analysis Final Project
 #### December 2024
 Introduction
