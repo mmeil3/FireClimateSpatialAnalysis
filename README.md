@@ -21,23 +21,23 @@ Talk about BC fire history, how uch forested area, typical climate zone
 -	Wildefire, temperature
 
 ![Map](TmMap.png)
-  Figure: Map of BC Fire Locations in 2021 with the mean centre.
+  Figure 1: *Map of BC Fire Locations in 2021 with the mean centre.*
 ![Map](Output_BarGraph_GG.png)
 
-  Figure:Bar Graph of Total Burned Area by Month in British Columbia, 2021.
+  Figure 2: *Bar Graph of Total Burned Area by Month in British Columbia, 2021.*
 ![Map](Output_Histogram.png)
 
-  Figure: Histogram of Frequency of Wildfire Sizes in British Columbia, 2021.
+  Figure 3: *Histogram of Frequency of Wildfire Sizes in British Columbia, 2021.*
 
 ![Map](CENTRALTENDENCIES.png)
 
-Figure 1: Central Tendencies Fire Descriptive Statistics for British Columbia in 2021
-Use formulas, 1-2 sentences about what these are-what and why
-
+  Figure 4: *Table of Central Tendencies Fire Descriptive Statistics for British Columbia in 2021*
 ![Map](RELATIVEPOSITION.png)
-Figure 2: Relative Position Fire Descriptive Statistics for British Columbia in 2021
+
+Figure 5: *Table of Relative Position Fire Descriptive Statistics for British Columbia in 2021*
 
 ## Data Description
+Use formulas, 1-2 sentences about what these are-what and why
 
 Task 6: Provide one sentence for each question above.
 -	Where did you collect data? PCDS
