@@ -1,8 +1,6 @@
-### Point Pattern Analysis, Autocorrelation, and Regression: Exploring Relationships between British Columbia's Climate and Fire Events in 2021
+### Exploring Associations between British Columbia's Climate and Fire Events in 2021: Point Pattern Analysis, Interpolation, and Regression
 #### Michaela Meil: Advanced Spatial Analysis Final Project
 #### December 2024
-Introduction
-
 ## Context
 
 	Wildfire has been the primary natural disturbance in the majority of British Columbia’s forests, and is predicted to be an increasing disturbance due to climate change (Zu, 2014). Four of the most severe wildfire seasons of the century have occurred in the past seven years: 2017, 2018, 2021, 2023 (Parisien et al., 2023). Factors such as temperature, precipitation, vegetation (mountain pine beetle outbreaks), timber harvest, soil condition, outdoor activities, and lack of traditional management practices all have significant impacts on wildfire (Stahl et al. 2006). While wildfires have significant effects on the landscape ecology, people living within British Columbia’s borders suffer from adverse health impacts from smoke, anxiety, and loss of neighborhood unity (Butry et al. 2001; Kochi et al. 2010).
@@ -14,27 +12,23 @@ The vast amount of factors influencing wildfires makes it challenging to underst
 ## Study Site
 
 British Columbia has 60 million hectares of forests and other natural vegetation types (i.e., grasslands, shrublands, and woodlands), and 76% of land is forested are characteristics that have shaped the area’s social, cultural, and economic identity (Parisien et al., 2023). BC’s forests have a full range of moisture, from temperate rainforests to high-desert woodlands; approx. 15% are considered dry, 31% wet, and 54% mesic (Parisien et al., 2023). There is also a small percentage of grasslands  (1%) and shrublands (7.2–12.5%). 
-	Since the 1950s, the number and area burned of wildfires had been steadily decreasing in the province until  approximately 2000, due to a cooler and wetter climatic pattern mid-century. This makes the recent increase of wildfire activity surprising and concerning as the world witnessed some of the worst wildfire seasons to date in the last 7 years.  Specifically in 2021, The warmest temperature ever recorded north of the 45th parallel (49.6 °C) occurred in the small town of Lytton, BC, on June 29, 2021 (Parisien et al., 2023). The following day a fire destroyed most of the community in minutes. The link between temperature and wildfire is evident here, along with the stark impacts it has on rural communities. 
+	Since the 1950s, the number and area burned of wildfires had been steadily decreasing in the province until approximately 2000, due to a cooler and wetter climatic pattern mid-century. This makes the recent increase of wildfire activity surprising and concerning as the world witnessed some of the worst wildfire seasons to date in the last 7 years. Specifically in 2021, The warmest temperature ever recorded north of the 45th parallel (49.6 °C) occurred in the small town of Lytton, BC, on June 29, 2021 (Parisien et al., 2023). The following day a fire destroyed most of the community in minutes. The link between temperature and wildfire is evident here, along with the stark impacts it has on rural communities. 
+ 
 ### Descriptive Statistics	
- In our study, we take temperature data from 615 weather stations from the Pacific Climate Impacts Consortium BC Station Data, and 2,959 fire events from the BC Data Catalogue Wildfire Incident Locations - Historical Dataset. Average temperature ranges are between 0 and 20 degrees C (Figure 1). The mean centre was congregated in the mid-south/east section of British Columbia, which coincides with the Interior zone,  which is home to numerous sensitive, alpine, and desert ecosystems that are extremely susceptible to wildfire (Figure 2), and most of the fires burned between Juny and July 2021 (Figure 3). There were many small-sized fires (ha) that burned in 2021, but few large-sized fires (ha) (Figure 4).
+ In our study, we take temperature data from 615 weather stations from the Pacific Climate Impacts Consortium BC Station Data, and 2,959 fire events from the BC Data Catalogue Wildfire Incident Locations - Historical Dataset. Average temperature ranges are between 0 and 20 degrees C (Figure 1). The mean centre was congregated in the mid-south/east section of British Columbia, which coincides with the Interior zone, which is home to numerous sensitive, alpine, and desert ecosystems that are extremely susceptible to wildfire (Figure 2), and most of the fires burned between Juny and July 2021 (Figure 3). There were many small-sized fires (ha) that burned in 2021, but few large-sized fires (ha) (Figure 4).
 
 ![Map](ClimateDataBCFigure1.png)
-*Figure 1: Map of Climate Data Points in British Columbia, Data Retrieved from PCDS.
+Figure 1: *Map of Climate Data Points in British Columbia, Data Retrieved from PCDS* 
 
 ![Map](TmMap.png)
-  Figure 2: *Map of BC Fire Locations in 2021 with the mean centre.*
+Figure 2: *Map of BC Fire Locations in 2021 with the mean centre.*
 ![Map](Output_BarGraph_GG.png)
-
-  Figure 3: *Bar Graph of Total Burned Area by Month in British Columbia, 2021.*
+Figure 3: *Bar Graph of Total Burned Area by Month in British Columbia, 2021.*
 ![Map](Output_Histogram.png)
-
-  Figure 4: *Histogram of Frequency of Wildfire Sizes in British Columbia, 2021.*
-
+Figure 4: *Histogram of Frequency of Wildfire Sizes in British Columbia, 2021.*
 ![Map](CENTRALTENDENCIES.png)
-
-  Figure 5: *Table of Central Tendencies Fire Descriptive Statistics for British Columbia in 2021*
+Figure 5: *Table of Central Tendencies Fire Descriptive Statistics for British Columbia in 2021*
 ![Map](RELATIVEPOSITION.png)
-
 Figure 6: *Table of Relative Position Fire Descriptive Statistics for British Columbia in 2021*
 
 You can see how the Descriptive Statistics for Wildfire in 2021 were calculated here:
@@ -240,7 +234,7 @@ map_TM
 dev.off()
 ```
 ## Data Description
-Our climate data was collected from the Pacific Climate Impacts Consortium BC Data Portal, where networks were selected for sufficient coverage of the Province. Data was collected from the BC Data Catalogue BC Wildfire Incident Locations - Historical Dataset. The year chosen to analyse was 2021, due to the extreme climate conditions, weather events, and destruction of communities that affected British Columbia drastically. This left us with 2959  fire event points, while analysing data from 615 weather stations across 4 Networks. As different networks have different naming conventions, a renaming process was employed to streamline data cleaning. For example, some columns were labeled “air_temperature” verus “air_temp”. We renamed all file and column names so that the air temperature data was able to be read effectively for each station across the province.  You can view the code for how this was conducted below. 
+Our climate data was collected from the Pacific Climate Impacts Consortium BC Data Portal, where networks were selected for sufficient coverage of the Province. Data was collected from the BC Data Catalogue BC Wildfire Incident Locations - Historical Dataset. The year chosen to analyse was 2021, due to the extreme climate conditions, weather events, and destruction of communities that affected British Columbia drastically. This left us with 2959 fire event points, while analysing data from 615 weather stations across 4 Networks. As different networks have different naming conventions, a renaming process was employed to streamline data cleaning. For example, some columns were labeled “air_temperature” verus “air_temp”. We renamed all file and column names so that the air temperature data was able to be read effectively for each station across the province. You can view the code for how this was conducted below. 
 
 ```r
 #********
@@ -304,7 +298,8 @@ for (file in csv_files) {
 In this tutorial, we employ a robust statistical analysis to understand if temperature helps explain the occurrence of wildfire. Our methods are broken up into Point Pattern Analysis, Interpolation, and Regression.
 
 ### Point Pattern Analysis
-We evaluated spatial distribution of fires, to determine if points are clustered, dispersed, or random. We employ three methods to complete our point pattern analysis: Nearest Neighbour Analysis (NNA), Quadrat Analysis, and k-function. 
+We evaluated spatial distribution of fires, to determine if points are clustered, dispersed, or random. We employ three methods to complete our point pattern analysis: Nearest Neighbour Analysis (NNA), Quadrat Analysis, and k-function.
+. 
 ```r
 ## For this lab you will need the following libraries: 
 
@@ -378,7 +373,12 @@ map <- tm_shape(bc_boundary) +
 print(map)
 ```
 ##### Nearest Neighbour Analysis
-NNA uses the Nearest Neighbourhood Distance to understand how observations of interest are distributed across British Columbia (Zu, 2014, p. 14). We can compare the mean NND to another random NND to determine whether our pattern is clustered, dispersed, or random. When NND values are close to zero values are random. When the values are larger than 0 they are dispersed, and smaller than 0 they are clustered (Zu, 2014, p. 14). 
+NNA uses the Nearest Neighbourhood Distance to understand how observations of interest are distributed across British Columbia (Zu, 2014, p. 14). We can compare the mean NND to another random NND to determine whether our pattern is clustered, dispersed, or random. When NND values are close to zero values are random. When the values are larger than 0 they are dispersed, and smaller than 0 they are clustered (Zu, 2014, p. 14).
+
+Null: The location of British Columbia fires are randomly distributed.
+
+Alternate: The location of British Columbia fires are not randomly distributed (Dispersed or Clustered)
+
 The average nearest neighbour value for a spatially random distribution is calculated using the following equation:
 
 $$ 
@@ -410,9 +410,6 @@ nnd_results <- data.frame(StudyArea = studyArea, MeanNND = nnd, RandomNND = r_nn
 print(nnd_results)
 ```
 
-
-
-
 #### Quadrat Analysis
 
 The Quadrat function method determines the point distribution by examining its density over British Columbia. We can compare observed distributions with random patterns to assess whether our pattern is clustered, dispersed, or random (Oyana, 2021). The formula and the code for performing a quadrat analysis is listed below. 
@@ -422,6 +419,10 @@ VAR = \frac{\Sigma f_ix_i^2 - [\frac{(\Sigma f_ix_i)^2}{m}]}{m-1}
 $$
 
 where the number of points per cell is x, where f is frequency, where m is the number of quadrats. 
+
+Null: The distribution of points follows a CSR pattern.
+
+Alternate: The distribution of points does not follow a random pattern (dispersion or clustering).
 ```r
 # Quadrat Analysis
 qcount <- quadratcount(event.ppp, nx = 10, ny = 10)
@@ -447,6 +448,10 @@ print(quadrat_results)
 
 K-function explores a spatial pattern across a range of spatial events, rather than relying on distances to the closest events (Oyana, 2021). It is based on all interevent distances between observation points and summarised to fit the model that best suits the spatial pattern of British Columbia.
 
+Null: British Columbia fires are randomly distributed in space at all distances.
+
+Alternate: British Columbia fires are not randomly distributed in space at all distances (Dispersed or Clustered).
+
 The equation for this calculation is:
 
 $$
@@ -460,11 +465,13 @@ envelope_k <- envelope(event.ppp, Kest, nsim = 99)
 plot(envelope_k)
 ```
 ### Interpolation
+
 ### Semivariogram
+The shape of a variogram helps us describe how the data is spatially autocorrelated. There are three main components that are important for interpreting the results of a semivariogram model: the sill, nugget, and range (Oyana, 263, p. 284). The sill being when the curve levels off, the nugget is for values that are very close to zero, this gives us an idea of the noise in our data. This is not necessarily a measurement error, but reminds us that some values that are close together may not be identical. The range is the distance from where the variogram first reaches, to where it levels off, where there is no more spatial autocorrelation. 
 
 #### Inverse Weighted Distance
 
-We then created a density surface for temperature using the point data from the weather stations across the province. The Inverse Distance Weighting method was employed to estimate a surface. IDW is a deterministic interpolation technique that estimates the values of unsampled points from values at nearby locations (Oyana, 2021, p. 282). This helps predict values where measurements are not available. It’s important to note it is topographically sensitive. 
+We then created a density surface for temperature using the point data from the weather stations across the province. The Inverse Distance Weighting method was employed to estimate a surface. IDW is a deterministic interpolation technique that estimates the values of unsampled points from values at nearby locations (Oyana, 2021, p. 282). This helps predict values where measurements are not available. It’s important to note it is topographically sensitive. We interpret the results from our interpolated surface visually.
 
 The formula below is used to calculate a surface: 
 $$ 
@@ -578,11 +585,14 @@ ggsave("Clipped_IDW_Interpolation_Map.png", width = 10, height = 8, dpi = 300)
 Regression analysis generates coefficients that represent the slope and intercept of a line that best fits the observed data points (Oyana, 2021, p. 148). The relationship is confirmed when (1) when there is a tendency for the dependent(or response)  variable,  Y,  to  vary  with  an  independent  (or  predictor)  variable,  X, in a systematic fashion and (2) when there is a well-defined scattering of data points around the curve that depicts some type of model direction. Linear regression can also be used to predict variable values, estimate unknown values given the values of another. It is best to take a two-tiered approach that involves Least Squares Regression  (LSR) and Geographically Weighted Regression (GWR) (Oyana, 2021, 149). 
 
 #### Least Squares Regression
-Least Squares Regression modelling helps identify important predictors that may explain the spatial processes in a given area, while taking into consideration the residuals (errors). For the purposes of our project, LSR would help us understand how temperature can predict wildfire in British Columbia. The residuals are then tested in the model and are randomly distributed (Oyana, 2021, p. 149). A simple regression model can be written as follows:
+Least Squares Regression modelling helps identify important predictors that may explain the spatial processes in a given area, while taking into consideration the residuals (errors). We are interest in looking at the overall patterns that suggest a linear relationship, to understand how much temperature explains wildfire. The residuals are then tested in the model and are randomly distributed (Oyana, 2021, p. 149). A simple regression model can be written as follows:
 
 $$
 Y = a + bX
 $$ 
+
+Null: Temperature (Independent Variable) has no effect on fire occurrence (dependent variable)
+Alternate: Temperature has a significant effect on fire occurence
 
 ```r
 # Read the shapefile
@@ -1047,8 +1057,6 @@ ggplot() +
   theme(legend.position = "bottom")
 ```
 
-### Interpolation-IDW and Kriging
-
 ### Density for Events Data
 ```r
 #Set working directory
@@ -1163,29 +1171,9 @@ final_data_df <- st_drop_geometry(final_data)
 write.csv(final_data_df, "final_data.csv", row.names = FALSE)
 
 ```
-### Least Squares Regression
-
-### Geographically Weighted Regression
-
-### Descriptive stats, PPA
-
-### PPA
-
-
 ## Results
 ### Point Pattern Analysis
 We evaluated spatial distribution of fires, to determine if points are clustered, dispersed, or random. We employ three methods to complete our point pattern analysis: Nearest Neighbour Analysis (NNA), Quadrat Analysis, and k-function. 
-##### Nearest Neighbour Analysis
-#### Quadrat Analysis
-#### k-Function
-
-### Interpolation
-#### Inverse Weighted Distance
-
-### Regression
-#### Least Squares Regression
-#### Geographically Weighted Regression
-
 
 ## Results
 ### Point Pattern Analysis
@@ -1214,8 +1202,6 @@ Figure 12: Semivariogram Model
 ### Regression
 #### Least Squares Regression
 
-
-
 Moran I test under randomisation
 
 data:  final_data_sf$residuals  
@@ -1242,11 +1228,6 @@ Moran I statistic       Expectation
 
 ## Discussion
 
-Describe results
-Overall, the results from this study show…..(ex, rainfall is poor predictor of variability of wildfire)
--	Rest of what your writing backs up that statement
-Overrall summary
-
 ## Results
 ### Point Pattern Analysis
 The NNDMean and NNDRandom  values from this test indicate that wildfire events in British Columbia are spatially clustered. This result shows strong evidence of significant clustering as indicated by the z-score of -65.2628 (see Figure 7). The quadrat analysis results indicate that wildfires have a clustered spatial distribution, with strong evidence that the clustering is statistically significant as indicated by the chi square value of 12866. 6506, which produces a p-value \< 0.0001 (see Figure 8). Please see the K-Function results for wildfire events in 2021 (Figure 9). They appear to be significantly spatially clustered at distances greater than 10,000 metres.
@@ -1256,18 +1237,23 @@ The NNDMean and NNDRandom  values from this test indicate that wildfire events i
 ### Inverse Distance Weighting
 Our interpolated surface of climate in British Columbia helps us create a temperature average for the province, even from unknown points. In the northern region, we see cooler temperature averages between 8 and 12 degrees. It is important to note here that there was less station coverage over the northern half of the province, so results may be slightly distorted. We see high temperature values in the southern interior of the province, as well as the eastern coast of Vancouver Island and the lower mainland. This corresponds with expected climate zones of these areas. 
 ### Semivariogram
-### Kriging
+
+We chose an exponential model to communicate the degree of spatial autocorrelation present in our dataset. The semivariogram has a psill value of 10.74561, and a range of 7010.943. There is very little noise as the space between the nugget and sill is quite small.
 
 ### Regression
+
 #### Least Squares Regression
+Our F statistic is 188.2 and is less than our critical value at (1, 465) degrees of freedom, and an extremely small p-value at 2^-16 Therefore, we reject the null hypothesis.
 
 #### Geographically Weighted Regression
 
-Describe results
-Overall, the results from this study show…..(ex, rainfall is poor predictor of variability of wildfire)
--	Rest of what your writing backs up that statement
+GWR: From our Ordinary Least Squares Model, we determined that Temperature does have a significant amount of spatial dependency on fire, so there is a need to construct a local statistic to explain the variations (Oyana, 2021). Our results from the Geographically Weighted Regression leave us with every cell to have its own R2 and pvalue that are mapped, as seen in Figure x.  Our Local R2 has a mean of 39.9%. This indicates that 36.9% of the variance in the dependent variable (fires) can be explained by our GWR for the province of British Columbia. 
 
+### Summary
 
+Overall, we c
+
+Can temperature explain wildfire occurence in British Columbia? Are these events clustered or dispersed?
 
 
 
