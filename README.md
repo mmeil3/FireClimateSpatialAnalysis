@@ -1250,5 +1250,24 @@ Overall, our statistical analysis of point pattern analysis, interpolation, and 
 While our analysis was robust, some shortcomings were noted. We were only using one variable (temperature), one year of data, and noticed a lack of weather station coverage. While we know temperature is an important variable, many other factors contribute to the spread of wildfire. We also only used one year of data. While this year was important due to the severe temperature and fire events that occured in the province, specifically Lytton, British Columbia, this limits our scope of understanding of climate and wildlife trends.  While we can go off of previous literature to supplement this, a more robust statistical analysis could use more historical fire data. Lastly, there are signficantly less weather stations in the northern half of the province, sparking challenges to getting full climate coverage of the province. Perhaps moving away from the PCDS source to other smaller weather stations up north would be worthwhile, but is likely another project all in itselt to build a database of adequetely dispered weather stations. Previous literature has outlined trends in wildfire increased by looking at a larger temporal scale (Parisien et al., 2023), some employ temperature along with relative humidity for more detailed results (Ozelkan et al, 2015)
 
 
+### Citations
+
+Blackwell, B. A., & Gray, R. (2005). *Forest health, fuels, and wildfire: Implications for long-term ecosystem health.* A report commissioned by the BC Forest Practices Board.
+
+British Columbia Data Catalogue. (2024). *BC wildfire fire incident locations - historical.* Government of British Columbia. https://catalogue.data.gov.bc.ca/dataset/bc-wildfire-fire-incident-locations-historical
+
+Kaur, H., & Sood, S. K. (2020). *Soft-computing-centric framework for wildfire monitoring, prediction and forecasting.* Soft Computing (Berlin, Germany), 24(13), 9651–9661. https://doi.org/10.1007/s00500-019-04477-3
+
+Oyana, T. J. (2021). *Spatial analysis with R: Statistics, visualization, and computational methods (Second edition)*. CRC Press.
+
+Ozelkan, E., Bagis, S., Ozelkan, E. C., Ustundag, B. B., Yucel, M., & Ormeci, C. (2015). *Spatial interpolation of climatic variables using land surface temperature and modified inverse distance weighting*. International Journal of Remote Sensing, 36(4), 1000–1025. https://doi.org/10.1080/01431161.2015.1007248
+
+Pacific Climate Impacts Consortium. (2024).* Meteorological data portal (PCDS)*. University of Victoria. https://services.pacificclimate.org/met-data-portal-pcds/app/
+
+Parisien, M. A., Barber, Q. E., Bourbonnais, M. L., et al. (2023). *Abrupt, climate-induced increase in wildfires in British Columbia since the mid-2000s.* Communications Earth & Environment, 4, 309. https://doi.org/10.1038/s43247-023-00977-1
+
+Xu, Z., Van Kooten, G. C., & University of Victoria. (2014). *Predicting wildfires and measuring their impacts: Case studies in British Columbia.* University of Victoria
+
+
 
 
