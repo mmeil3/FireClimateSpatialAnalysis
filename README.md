@@ -1,4 +1,4 @@
-### Exploring Associations between British Columbia's Climate and Fire Events in 2021: Point Pattern Analysis, Interpolation, and Regression
+### Investigating Associations between British Columbia's Climate and Fire Events in 2021: Point Pattern Analysis, Interpolation, and Regression
 #### Michaela Meil: Advanced Spatial Analysis Final Project
 #### December 2024
 
