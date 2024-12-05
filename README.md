@@ -18,18 +18,18 @@ Since the 1950s, the number and area burned of wildfires had been steadily decre
  In our study, we take temperature data from 615 weather stations from the Pacific Climate Impacts Consortium BC Station Data, and 2,959 fire events from the BC Data Catalogue Wildfire Incident Locations - Historical Dataset. Average temperature ranges are between 0 and 20 degrees C (Figure 1). The mean centre was congregated in the mid-south/east section of British Columbia, which coincides with the Interior zone, which is home to numerous sensitive, alpine, and desert ecosystems that are extremely susceptible to wildfire (Figure 2), and most of the fires burned between Juny and July 2021 (Figure 3). There were many small-sized fires (ha) that burned in 2021, but few large-sized fires (ha) (Figure 4).
 
 ![Map](ClimateDataBCFigure1.png)
-Figure 1: *Map of Climate Data Points in British Columbia, Data Retrieved from PCDS* 
+*Figure 1: *Map of Climate Data Points in British Columbia, Data Retrieved from PCDS* 
 
 ![Map](TmMap.png)
-Figure 2: *Map of BC Fire Locations in 2021 with the mean centre.*
+*Figure 2: *Map of BC Fire Locations in 2021 with the mean centre.*
 ![Map](Output_BarGraph_GG.png)
-Figure 3: *Bar Graph of Total Burned Area by Month in British Columbia, 2021.*
+*Figure 3: *Bar Graph of Total Burned Area by Month in British Columbia, 2021.*
 ![Map](Output_Histogram.png)
-Figure 4: *Histogram of Frequency of Wildfire Sizes in British Columbia, 2021.*
+*Figure 4: *Histogram of Frequency of Wildfire Sizes in British Columbia, 2021.*
 ![Map](CENTRALTENDENCIES.png)
-Figure 5: *Table of Central Tendencies Fire Descriptive Statistics for British Columbia in 2021*
+*Figure 5: *Table of Central Tendencies Fire Descriptive Statistics for British Columbia in 2021*
 ![Map](RELATIVEPOSITION.png)
-Figure 6: *Table of Relative Position Fire Descriptive Statistics for British Columbia in 2021*
+*Figure 6: *Table of Relative Position Fire Descriptive Statistics for British Columbia in 2021*
 
 You can see how the Descriptive Statistics for Wildfire in 2021 were calculated here:
 ```r
@@ -295,8 +295,328 @@ for (file in csv_files) {
 ```
 ### Additional Data Preparation of Events Data
 
-In order to perform our analyses we outline in our methods, we also need to create a density map of our events data, combine our temperature and fire data. That code is broken up into two sections below:
+In order to perform our analyses we outline in our methods, we also need to  take temperature averages for each station, map that station data (see Figure 1), create a density map of our events data, combine our temperature and fire data. That code is broken up into two sections below:
 
+#### Cleaning Temperature Data
+```r
+
+  # Load necessary libraries
+library(dplyr)
+
+# Specify the directory containing your CSV files
+file_directory <- "C://Users/micha/Documents/GEOG 418/Final Project"
+# List all CSV files in the directory and its subdirectories
+#List all CSV files in directory and subdirectories
+csv_files_rename<-list.files(path ="/Users/micha/Documents/GEOG 418/Final Project/pics_data",
+                      pattern = "\\.csv$",  #Match only CSV files
+                      full.names = TRUE, #Return full file paths
+                      recursive = TRUE, #Search in subdirectories
+                      ignore.case = TRUE) #Case-insensitive matching
+
+# Step 2: Process each file
+for (file in csv_files) {
+  
+  # Read the file without header (header = FALSE) to capture all rows
+  df <- read.csv(file, header = FALSE, fill = TRUE)
+  
+  # Step 3: Assign the second row (index 2) as the column names
+  colnames(df) <- df[2, ]
+  
+  # Step 5: Clean column names by trimming any extra spaces
+  colnames(df) <- trimws(colnames(df))
+  
+  # Step 6: Rename columns that match variations of AirTemp
+  # List possible variations of the column name
+  column_variations <- c("air_temp", "air_temperature")
+  
+  # Loop through each variation and rename to 'AirTemp'
+  for (var in column_variations) {
+    if (var %in% colnames(df)) {
+      colnames(df)[colnames(df) == var] <- "AirTemp"
+      message("Renamed column '", var, "' to 'AirTemp' in file: ", basename(file))
+    }
+  }
+  
+  # Step 7: Save the cleaned data frame to a new file to avoid overwriting
+  # Generate a new filename to avoid overwriting
+  target_folder <- "C:/Users/micha/Documents/GEOG 418/Final Project/pcds_rename"
+
+  new_file_name <- paste0(tools::file_path_sans_ext(basename(file)), "_processed.csv") #put in file i want it to save to
+  
+  
+  # Create the full path to save the new file in the target folder
+  new_file_path <- file.path(target_folder, new_file_name)
+  
+  # Step 8: Save the cleaned data frame to a new file
+  write.csv(df, new_file_path, row.names = FALSE)
+  
+  # Optionally, print a message to confirm the file has been saved
+  message("Processed file saved as: ", new_file_path)
+}
+
+
+```
+
+  
+```r
+#Load Libraries
+library(tmap)
+library(spdep)
+library(raster)
+library(sf)
+library(lubridate)
+library(dplyr)
+library(gstat)
+library(ggplot2)
+library(maps)
+
+
+#Set working directory
+dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
+setwd(dir)
+
+#######
+
+# Create an empty data frame with specified columns
+empty_data <- data.frame(Native.ID = character(), TEMP = numeric(), 
+                         Longitude = numeric(), Latitude = numeric(), stringsAsFactors = FALSE)
+
+csv_file_name <- "BC_AVG_TEMP.csv"
+
+# Write the empty data frame to a CSV file
+write.csv(empty_data, file = csv_file_name, row.names = FALSE)
+########
+
+
+#Run through all csv files in folder to calculate an aggregate measure of temperature
+# List all CSV files in the directory
+#csv_files <- list.files(pattern = "\\.csv$", full.names = TRUE)
+csv_files <- list.files(path = "./pcds_rename", pattern = "\\.csv$", full.names = TRUE)
+
+#List all CSV files in directory and subdirectories
+csv_files<-list.files(path ="/Users/micha/Documents/GEOG 418/Final Project/pcds_rename",
+                      pattern = "\\.csv$",  #Match only CSV files
+                      full.names = TRUE, #Return full file paths
+                      recursive = TRUE, #Search in subdirectories
+                      ignore.case = TRUE) #Case-insensitive matching
+temp_data_list <- list()
+print(csv_files)
+
+
+# Loop through each CSV file
+for (file in csv_files) {
+
+  # Print the name of the file being processed
+  print(paste("Processing file:", file))
+  
+  #Read each file
+hourly_data <- read.csv(file, skip = 0, header = TRUE)
+file_name <- file
+
+# Inspect the AirTemp column for non-numeric values
+print(head(hourly_data$AirTemp))
+print(unique(hourly_data$AirTemp))
+
+# Read the file with a safety check to ensure it’s read correctly
+hourly_data <- tryCatch({
+  read.csv(file, skip = 0, header = TRUE)
+}, error = function(e) {
+  cat("Error reading file:", file, "\n")
+  cat("Error message:", e$message, "\n")
+  return(NULL)  # Skip this file and move to the next one
+})
+
+# If the file is successfully read, proceed with processing
+if (!is.null(hourly_data)) {
+  
+  # Print out the first few rows to inspect
+  print(head(hourly_data))
+  
+  # Check if 'AirTemp' exists in the dataframe
+  if (!"AirTemp" %in% colnames(hourly_data)) {
+    cat("Error: 'AirTemp' column not found in file:", basename(file), "\n")
+    next  # Skip to the next file if the column is not found
+  }
+
+# Convert AirTemp to numeric, suppress warnings for non-numeric values
+hourly_data$AirTemp <- suppressWarnings(as.numeric(as.character(hourly_data$AirTemp)))
+
+# Check if AirTemp conversion worked
+print(head(hourly_data$AirTemp))
+
+#Remove rows with NA in AirTemp
+hourly_data <- hourly_data %>%
+  filter(!is.na(AirTemp))
+
+#Adjust the date/time column so that it is usable in calculations
+hourly_data$time <- gsub(" UTC", "", hourly_data$time)  # Remove " UTC" if present
+hourly_data$time <- lubridate::ymd_hms(hourly_data$time)  # Convert to POSIXct
+
+
+# Check the class of the time column
+print(class(hourly_data$time))
+
+# Calculate daily average temperature
+daily_avg_temp <- hourly_data %>%
+  group_by(date = as.Date(time)) %>%
+  summarize(daily_avg_temp = mean(AirTemp, na.rm = TRUE))
+
+# Display the daily average temperatures
+print(daily_avg_temp)
+
+# Calculate monthly average temperature
+monthly_avg_temp <- hourly_data %>%
+  group_by(year = year(time), month = month(time)) %>%
+  summarize(monthly_avg_temp = mean(AirTemp, na.rm = TRUE)) %>%
+  ungroup()  # Ungroup for any future modifications
+
+# Display the monthly average temperatures
+print(monthly_avg_temp)
+
+
+# Filter for the months from May to October
+average_temp_may_october <- hourly_data %>%
+  filter(month(time) >= 5 & month(time) <= 10) %>%
+  summarize(TEMP = mean(AirTemp, na.rm = TRUE))  # Replace 'temperature' with your column name
+
+# Display the average temperature
+print(average_temp_may_october)
+
+
+#Assigning the filename to an object
+#Extract the filename (with extension)
+file_name <- basename(file_name)
+
+#Remove the file extension
+file_name_no_ext <- sub("\\.[^.]*$", "", file_name)
+
+# Display the result
+print(file_name_no_ext)
+
+#Read the existing CSV file
+file_path <- csv_file_name
+data <- read.csv(file_path)
+
+#Print the original data
+cat("Original Data:\n")
+print(head(data))
+
+#Round the temperature values to two decimals
+Roundedtemp <- round(average_temp_may_october$TEMP,2)
+
+#Convert the weather station ID column to character
+data$Native.ID <- as.character(data$Native.ID)
+
+# Step 3: Append new rows
+new_values <- data.frame(Native.ID = file_name_no_ext, 
+                         TEMP = Roundedtemp, 
+                         stringsAsFactors = FALSE)
+
+data <- bind_rows(data, new_values)
+print(head(data))
+
+# Print the updated data
+cat("Updated Data:\n")
+print(head(data))
+
+
+#Save the updated data frame back to a new CSV file
+output_file_path <- csv_file_name
+write.csv(data, file = output_file_path, row.names = FALSE)
+}
+}
+
+###################
+#Merge the climate data for each station with the location data found in the metadata file
+metadata <- read.csv("C:/Users/micha/Documents/GEOG 418/Final Project/station-metadata-by-station.csv")
+climatedata <- read.csv("C:/Users/micha/Documents/GEOG 418/Final Project/BC_AVG_TEMP.csv")
+
+#Add "_processed" suffix to the Native.ID in metadata
+metadata$Native.ID <- paste0(metadata$Native.ID, "_processed")
+
+#Perform merge
+merged_data <- merge(metadata, climatedata, by = "Native.ID")
+
+#Remove the last two columns which are duplicate Latitude and Longitude
+merged_data <- merged_data[, -((ncol(merged_data)-1):ncol(merged_data))]
+
+#Change column names for Latitude and Longitude to remove the x
+colnames(merged_data)[colnames(merged_data) %in% c("Latitude.x", "Longitude.x")] <- c("Longitude", "Latitude")
+
+#Omit NA's
+merged_data <- na.omit(merged_data)
+
+#There are erroneous temperature values. Filter data to remove these
+merged_data <- merged_data[merged_data$TEMP <= 100, ]
+
+#Write the dataset so that it  is stored
+write.csv(merged_data, file = "ClimateData.csv", row.names = FALSE)
+```
+#### Mapping Temperature Data
+```r
+library(sf)
+library(ggplot2)
+library(dplyr)
+
+# Read the CSV file
+climate_data <- read.csv("ClimateData.csv")
+
+# Ensure Latitude and Longitude columns are correctly formatted
+# Extract Longitude and Latitude from the Unique.Locations column
+climate_data <- climate_data %>%
+  mutate(
+    Longitude = as.numeric(sub("([0-9.-]+) W.*", "-\\1", Unique.Locations)),  # Extract Longitude and negate it for 'W'
+    Latitude = as.numeric(sub(".*([0-9.-]+) W.*, ([0-9.-]+) N.*", "\\2", Unique.Locations))  # Extract Latitude before 'N'
+  )
+# Verify the result
+head(climate_data)
+
+# Check if there are any NA values in the Latitude and Longitude columns
+sum(is.na(climate_data$Longitude))  # Number of missing longitudes
+sum(is.na(climate_data$Latitude))   # Number of missing latitudes
+
+# Check rows where Latitude is NA
+missing_latitude_rows <- climate_data[is.na(climate_data$Latitude), ]
+print(missing_latitude_rows$Unique.Locations)
+
+# Modify the original dataframe by removing rows with NA latitude
+climate_data <- climate_data %>%
+  filter(!is.na(Latitude))
+
+# Create a simple feature object (sf) using Latitude and Longitude
+climate_sf <- st_as_sf(climate_data, coords = c("Longitude", "Latitude"), crs = 4326)
+
+# Transform climate data to the same CRS as the BC boundary
+climate_sf <- st_transform(climate_sf, crs = 3005)
+
+# Optionally, you can select columns that you want to keep in the shapefile
+climate_sf <- climate_sf %>% select(Native.ID, TEMP, geometry)
+
+# Write the shapefile to disk
+st_write(climate_sf, "ClimateData.shp")
+
+# Confirmation message
+print("Shapefile has been created: ClimateData.shp")
+
+# Load the shapefiles
+climate_sf <- st_read("ClimateData.shp")
+bc_boundary <- st_read("BC_Boundary.shp")
+bc_boundary <- st_transform(bc_boundary, CRS = 3005)
+
+# Create the map
+ggplot() +
+  geom_sf(data = bc_boundary, fill = "lightgrey", color = "black") +
+  # Map the TEMP variable to color
+  geom_sf(data = climate_sf, aes(color = TEMP), size = 2) + 
+  scale_color_gradient(low = "blue", high = "green") + # Adjust color gradient as needed
+  theme_minimal() +
+  labs(title = "Map of Climate Data Points in British Columbia",
+       subtitle = "Overlayed on BC Boundary",
+       x = "Longitude",  # Use Longitude for x-axis
+       y = "Latitude",   # Use Latitude for y-axis
+       color = "Temperature (°C)") + # Label for color legend
+  theme(legend.position = "bottom")
+```
 #### Density for Events Data
 ```r
 #Set working directory
@@ -844,327 +1164,6 @@ ggplot(data = gwr_output_sf_fixed) +
 ggsave("gwr_coefficients_fixed_bandwidth.png", width = 10, height = 8, dpi = 300)
 ```
 
-```r
-
-  # Load necessary libraries
-library(dplyr)
-
-# Specify the directory containing your CSV files
-file_directory <- "C://Users/micha/Documents/GEOG 418/Final Project"
-# List all CSV files in the directory and its subdirectories
-#List all CSV files in directory and subdirectories
-csv_files_rename<-list.files(path ="/Users/micha/Documents/GEOG 418/Final Project/pics_data",
-                      pattern = "\\.csv$",  #Match only CSV files
-                      full.names = TRUE, #Return full file paths
-                      recursive = TRUE, #Search in subdirectories
-                      ignore.case = TRUE) #Case-insensitive matching
-
-# Step 2: Process each file
-for (file in csv_files) {
-  
-  # Read the file without header (header = FALSE) to capture all rows
-  df <- read.csv(file, header = FALSE, fill = TRUE)
-  
-  # Step 3: Assign the second row (index 2) as the column names
-  colnames(df) <- df[2, ]
-  
-  # Step 5: Clean column names by trimming any extra spaces
-  colnames(df) <- trimws(colnames(df))
-  
-  # Step 6: Rename columns that match variations of AirTemp
-  # List possible variations of the column name
-  column_variations <- c("air_temp", "air_temperature")
-  
-  # Loop through each variation and rename to 'AirTemp'
-  for (var in column_variations) {
-    if (var %in% colnames(df)) {
-      colnames(df)[colnames(df) == var] <- "AirTemp"
-      message("Renamed column '", var, "' to 'AirTemp' in file: ", basename(file))
-    }
-  }
-  
-  # Step 7: Save the cleaned data frame to a new file to avoid overwriting
-  # Generate a new filename to avoid overwriting
-  target_folder <- "C:/Users/micha/Documents/GEOG 418/Final Project/pcds_rename"
-
-  new_file_name <- paste0(tools::file_path_sans_ext(basename(file)), "_processed.csv") #put in file i want it to save to
-  
-  
-  # Create the full path to save the new file in the target folder
-  new_file_path <- file.path(target_folder, new_file_name)
-  
-  # Step 8: Save the cleaned data frame to a new file
-  write.csv(df, new_file_path, row.names = FALSE)
-  
-  # Optionally, print a message to confirm the file has been saved
-  message("Processed file saved as: ", new_file_path)
-}
-
-
-```
-
-  
-```r
-#Load Libraries
-library(tmap)
-library(spdep)
-library(raster)
-library(sf)
-library(lubridate)
-library(dplyr)
-library(gstat)
-library(ggplot2)
-library(maps)
-
-
-#Set working directory
-dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
-setwd(dir)
-
-#######
-
-# Create an empty data frame with specified columns
-empty_data <- data.frame(Native.ID = character(), TEMP = numeric(), 
-                         Longitude = numeric(), Latitude = numeric(), stringsAsFactors = FALSE)
-
-csv_file_name <- "BC_AVG_TEMP.csv"
-
-# Write the empty data frame to a CSV file
-write.csv(empty_data, file = csv_file_name, row.names = FALSE)
-########
-
-
-#Run through all csv files in folder to calculate an aggregate measure of temperature
-# List all CSV files in the directory
-#csv_files <- list.files(pattern = "\\.csv$", full.names = TRUE)
-csv_files <- list.files(path = "./pcds_rename", pattern = "\\.csv$", full.names = TRUE)
-
-#List all CSV files in directory and subdirectories
-csv_files<-list.files(path ="/Users/micha/Documents/GEOG 418/Final Project/pcds_rename",
-                      pattern = "\\.csv$",  #Match only CSV files
-                      full.names = TRUE, #Return full file paths
-                      recursive = TRUE, #Search in subdirectories
-                      ignore.case = TRUE) #Case-insensitive matching
-temp_data_list <- list()
-print(csv_files)
-
-
-# Loop through each CSV file
-for (file in csv_files) {
-
-  # Print the name of the file being processed
-  print(paste("Processing file:", file))
-  
-  #Read each file
-hourly_data <- read.csv(file, skip = 0, header = TRUE)
-file_name <- file
-
-# Inspect the AirTemp column for non-numeric values
-print(head(hourly_data$AirTemp))
-print(unique(hourly_data$AirTemp))
-
-# Read the file with a safety check to ensure it’s read correctly
-hourly_data <- tryCatch({
-  read.csv(file, skip = 0, header = TRUE)
-}, error = function(e) {
-  cat("Error reading file:", file, "\n")
-  cat("Error message:", e$message, "\n")
-  return(NULL)  # Skip this file and move to the next one
-})
-
-# If the file is successfully read, proceed with processing
-if (!is.null(hourly_data)) {
-  
-  # Print out the first few rows to inspect
-  print(head(hourly_data))
-  
-  # Check if 'AirTemp' exists in the dataframe
-  if (!"AirTemp" %in% colnames(hourly_data)) {
-    cat("Error: 'AirTemp' column not found in file:", basename(file), "\n")
-    next  # Skip to the next file if the column is not found
-  }
-
-# Convert AirTemp to numeric, suppress warnings for non-numeric values
-hourly_data$AirTemp <- suppressWarnings(as.numeric(as.character(hourly_data$AirTemp)))
-
-# Check if AirTemp conversion worked
-print(head(hourly_data$AirTemp))
-
-#Remove rows with NA in AirTemp
-hourly_data <- hourly_data %>%
-  filter(!is.na(AirTemp))
-
-#Adjust the date/time column so that it is usable in calculations
-hourly_data$time <- gsub(" UTC", "", hourly_data$time)  # Remove " UTC" if present
-hourly_data$time <- lubridate::ymd_hms(hourly_data$time)  # Convert to POSIXct
-
-
-# Check the class of the time column
-print(class(hourly_data$time))
-
-# Calculate daily average temperature
-daily_avg_temp <- hourly_data %>%
-  group_by(date = as.Date(time)) %>%
-  summarize(daily_avg_temp = mean(AirTemp, na.rm = TRUE))
-
-# Display the daily average temperatures
-print(daily_avg_temp)
-
-# Calculate monthly average temperature
-monthly_avg_temp <- hourly_data %>%
-  group_by(year = year(time), month = month(time)) %>%
-  summarize(monthly_avg_temp = mean(AirTemp, na.rm = TRUE)) %>%
-  ungroup()  # Ungroup for any future modifications
-
-# Display the monthly average temperatures
-print(monthly_avg_temp)
-
-
-# Filter for the months from May to October
-average_temp_may_october <- hourly_data %>%
-  filter(month(time) >= 5 & month(time) <= 10) %>%
-  summarize(TEMP = mean(AirTemp, na.rm = TRUE))  # Replace 'temperature' with your column name
-
-# Display the average temperature
-print(average_temp_may_october)
-
-
-#Assigning the filename to an object
-#Extract the filename (with extension)
-file_name <- basename(file_name)
-
-#Remove the file extension
-file_name_no_ext <- sub("\\.[^.]*$", "", file_name)
-
-# Display the result
-print(file_name_no_ext)
-
-#Read the existing CSV file
-file_path <- csv_file_name
-data <- read.csv(file_path)
-
-#Print the original data
-cat("Original Data:\n")
-print(head(data))
-
-#Round the temperature values to two decimals
-Roundedtemp <- round(average_temp_may_october$TEMP,2)
-
-#Convert the weather station ID column to character
-data$Native.ID <- as.character(data$Native.ID)
-
-# Step 3: Append new rows
-new_values <- data.frame(Native.ID = file_name_no_ext, 
-                         TEMP = Roundedtemp, 
-                         stringsAsFactors = FALSE)
-
-data <- bind_rows(data, new_values)
-print(head(data))
-
-# Print the updated data
-cat("Updated Data:\n")
-print(head(data))
-
-
-#Save the updated data frame back to a new CSV file
-output_file_path <- csv_file_name
-write.csv(data, file = output_file_path, row.names = FALSE)
-}
-}
-
-###################
-#Merge the climate data for each station with the location data found in the metadata file
-metadata <- read.csv("C:/Users/micha/Documents/GEOG 418/Final Project/station-metadata-by-station.csv")
-climatedata <- read.csv("C:/Users/micha/Documents/GEOG 418/Final Project/BC_AVG_TEMP.csv")
-
-#Add "_processed" suffix to the Native.ID in metadata
-metadata$Native.ID <- paste0(metadata$Native.ID, "_processed")
-
-#Perform merge
-merged_data <- merge(metadata, climatedata, by = "Native.ID")
-
-#Remove the last two columns which are duplicate Latitude and Longitude
-merged_data <- merged_data[, -((ncol(merged_data)-1):ncol(merged_data))]
-
-#Change column names for Latitude and Longitude to remove the x
-colnames(merged_data)[colnames(merged_data) %in% c("Latitude.x", "Longitude.x")] <- c("Longitude", "Latitude")
-
-#Omit NA's
-merged_data <- na.omit(merged_data)
-
-#There are erroneous temperature values. Filter data to remove these
-merged_data <- merged_data[merged_data$TEMP <= 100, ]
-
-#Write the dataset so that it  is stored
-write.csv(merged_data, file = "ClimateData.csv", row.names = FALSE)
-```
-    * Normal
-* Mapping Climate Data
-```r
-library(sf)
-library(ggplot2)
-library(dplyr)
-
-# Read the CSV file
-climate_data <- read.csv("ClimateData.csv")
-
-# Ensure Latitude and Longitude columns are correctly formatted
-# Extract Longitude and Latitude from the Unique.Locations column
-climate_data <- climate_data %>%
-  mutate(
-    Longitude = as.numeric(sub("([0-9.-]+) W.*", "-\\1", Unique.Locations)),  # Extract Longitude and negate it for 'W'
-    Latitude = as.numeric(sub(".*([0-9.-]+) W.*, ([0-9.-]+) N.*", "\\2", Unique.Locations))  # Extract Latitude before 'N'
-  )
-# Verify the result
-head(climate_data)
-
-# Check if there are any NA values in the Latitude and Longitude columns
-sum(is.na(climate_data$Longitude))  # Number of missing longitudes
-sum(is.na(climate_data$Latitude))   # Number of missing latitudes
-
-# Check rows where Latitude is NA
-missing_latitude_rows <- climate_data[is.na(climate_data$Latitude), ]
-print(missing_latitude_rows$Unique.Locations)
-
-# Modify the original dataframe by removing rows with NA latitude
-climate_data <- climate_data %>%
-  filter(!is.na(Latitude))
-
-# Create a simple feature object (sf) using Latitude and Longitude
-climate_sf <- st_as_sf(climate_data, coords = c("Longitude", "Latitude"), crs = 4326)
-
-# Transform climate data to the same CRS as the BC boundary
-climate_sf <- st_transform(climate_sf, crs = 3005)
-
-# Optionally, you can select columns that you want to keep in the shapefile
-climate_sf <- climate_sf %>% select(Native.ID, TEMP, geometry)
-
-# Write the shapefile to disk
-st_write(climate_sf, "ClimateData.shp")
-
-# Confirmation message
-print("Shapefile has been created: ClimateData.shp")
-
-# Load the shapefiles
-climate_sf <- st_read("ClimateData.shp")
-bc_boundary <- st_read("BC_Boundary.shp")
-bc_boundary <- st_transform(bc_boundary, CRS = 3005)
-
-# Create the map
-ggplot() +
-  geom_sf(data = bc_boundary, fill = "lightgrey", color = "black") +
-  # Map the TEMP variable to color
-  geom_sf(data = climate_sf, aes(color = TEMP), size = 2) + 
-  scale_color_gradient(low = "blue", high = "green") + # Adjust color gradient as needed
-  theme_minimal() +
-  labs(title = "Map of Climate Data Points in British Columbia",
-       subtitle = "Overlayed on BC Boundary",
-       x = "Longitude",  # Use Longitude for x-axis
-       y = "Latitude",   # Use Latitude for y-axis
-       color = "Temperature (°C)") + # Label for color legend
-  theme(legend.position = "bottom")
-```
-
 ## Results
 ### Point Pattern Analysis
 We evaluated spatial distribution of fires, to determine if points are clustered, dispersed, or random. We employ three methods to complete our point pattern analysis: Nearest Neighbour Analysis (NNA), Quadrat Analysis, and k-function. 
@@ -1179,7 +1178,7 @@ We evaluated spatial distribution of fires, to determine if points are clustered
 ![Map](quadrat_analysis_table.png)
 
 *Figure 8: Table of Quadrat Analysis Results
-![Map](Kfunctionresults.png)
+
 #### k-Function
 ![Map](Kfunctionresults.png)
 
@@ -1210,18 +1209,18 @@ Moran I statistic       Expectation
          Variance 
      0.0006510283 
 
-Figure x: Morans I results from Ordinary Least Squares Regression Model
+*Figure 13: Morans I results from Ordinary Least Squares Regression Model
     
 
 ![Map](BCRegression.png)
-*Figure 12: British Columbia Map of Residuals from Least Squares Regression Analysis
+*Figure 14: British Columbia Map of Residuals from Least Squares Regression Analysis
 ![Map](Detailed_Model_Summary.png)
-*Figure x: Detailed Ordinal Least Squares Regression Model Table
+*Figure 15: Detailed Ordinal Least Squares Regression Model Table
 #### Geographically Weighted Regression
 ![Map](LocalR2.png)
-*Figure 13: Map of Local R2 with Banwidth of 50 km for British Columbia
+*Figure 16: Map of Local R2 with Banwidth of 50 km for British Columbia
 ![Map](GWR.png)
-*Figure 14: Map of Geographically Weighted Regression Coefficients with 50km Bandwith in British Columbia
+*Figure 17: Map of Geographically Weighted Regression Coefficients with 50km Bandwith in British Columbia
 
 ## Discussion
 
