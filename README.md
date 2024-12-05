@@ -1,10 +1,10 @@
 ### Exploring Associations between British Columbia's Climate and Fire Events in 2021: Point Pattern Analysis, Interpolation, and Regression
 #### Michaela Meil: Advanced Spatial Analysis Final Project
 #### December 2024
+
 ## Context
 
-	Wildfire has been the primary natural disturbance in the majority of British Columbia’s forests, and is predicted to be an increasing disturbance due to climate change (Zu, 2014). Four of the most severe wildfire seasons of the century have occurred in the past seven years: 2017, 2018, 2021, 2023 (Parisien et al., 2023). Factors such as temperature, precipitation, vegetation (mountain pine beetle outbreaks), timber harvest, soil condition, outdoor activities, and lack of traditional management practices all have significant impacts on wildfire (Stahl et al. 2006). While wildfires have significant effects on the landscape ecology, people living within British Columbia’s borders suffer from adverse health impacts from smoke, anxiety, and loss of neighborhood unity (Butry et al. 2001; Kochi et al. 2010).
-
+Wildfire has been the primary natural disturbance in the majority of British Columbia’s forests, and is predicted to be an increasing disturbance due to climate change (Zu, 2014). Four of the most severe wildfire seasons of the century have occurred in the past seven years: 2017, 2018, 2021, 2023 (Parisien et al., 2023). Factors such as temperature, precipitation, vegetation (mountain pine beetle outbreaks), timber harvest, soil condition, outdoor activities, and lack of traditional management practices all have significant impacts on wildfire (Stahl et al. 2006). While wildfires have significant effects on the landscape ecology, people living within British Columbia’s borders suffer from adverse health impacts from smoke, anxiety, and loss of neighborhood unity (Butry et al. 2001; Kochi et al. 2010).
 
 ## Identifying the Problem
 The vast amount of factors influencing wildfires makes it challenging to understand why wildfires occur (Zu, 2014). Temperature has been used as an effective and significant factor in future wildfire occurrence modelling, with higher accuracy than precipitation (Zu, 2014).  In this statistical analysis, we take temperature data across the province of British Columbia, along with fire data for the year 2021 to ask: Can temperature explain wildfire occurence in British Columbia? Are these events clustered or dispersed?
@@ -12,7 +12,7 @@ The vast amount of factors influencing wildfires makes it challenging to underst
 ## Study Site
 
 British Columbia has 60 million hectares of forests and other natural vegetation types (i.e., grasslands, shrublands, and woodlands), and 76% of land is forested are characteristics that have shaped the area’s social, cultural, and economic identity (Parisien et al., 2023). BC’s forests have a full range of moisture, from temperate rainforests to high-desert woodlands; approx. 15% are considered dry, 31% wet, and 54% mesic (Parisien et al., 2023). There is also a small percentage of grasslands  (1%) and shrublands (7.2–12.5%). 
-	Since the 1950s, the number and area burned of wildfires had been steadily decreasing in the province until approximately 2000, due to a cooler and wetter climatic pattern mid-century. This makes the recent increase of wildfire activity surprising and concerning as the world witnessed some of the worst wildfire seasons to date in the last 7 years. Specifically in 2021, The warmest temperature ever recorded north of the 45th parallel (49.6 °C) occurred in the small town of Lytton, BC, on June 29, 2021 (Parisien et al., 2023). The following day a fire destroyed most of the community in minutes. The link between temperature and wildfire is evident here, along with the stark impacts it has on rural communities. 
+Since the 1950s, the number and area burned of wildfires had been steadily decreasing in the province until approximately 2000, due to a cooler and wetter climatic pattern mid-century. This makes the recent increase of wildfire activity surprising and concerning as the world witnessed some of the worst wildfire seasons to date in the last 7 years. Specifically in 2021, The warmest temperature ever recorded north of the 45th parallel (49.6 °C) occurred in the small town of Lytton, BC, on June 29, 2021 (Parisien et al., 2023). The following day a fire destroyed most of the community in minutes. The link between temperature and wildfire is evident here, along with the stark impacts it has on rural communities. 
  
 ### Descriptive Statistics	
  In our study, we take temperature data from 615 weather stations from the Pacific Climate Impacts Consortium BC Station Data, and 2,959 fire events from the BC Data Catalogue Wildfire Incident Locations - Historical Dataset. Average temperature ranges are between 0 and 20 degrees C (Figure 1). The mean centre was congregated in the mid-south/east section of British Columbia, which coincides with the Interior zone, which is home to numerous sensitive, alpine, and desert ecosystems that are extremely susceptible to wildfire (Figure 2), and most of the fires burned between Juny and July 2021 (Figure 3). There were many small-sized fires (ha) that burned in 2021, but few large-sized fires (ha) (Figure 4).
@@ -291,6 +291,125 @@ for (file in csv_files) {
   # Optionally, print a message to confirm the file has been saved
   message("Processed file saved as: ", new_file_path)
 }
+
+```
+### Additional Data Preparation of Events Data
+
+In order to perform our analyses we outline in our methods, we also need to create a density map of our events data, combine our temperature and fire data. That code is broken up into two sections below:
+
+#### Density for Events Data
+```r
+#Set working directory
+dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
+setwd(dir)
+
+# Load your point data (make sure to adjust the path). Here we use a wildfire dataset from the BC Data Catoluge called H_FIRE_PNT_point and our BC Boundary file.
+H_FIRE_PNT_point <- st_read("H_FIRE_PNT_point.shp")
+bc_boundary <- st_read("bc_boundary.shp")  # Ensure the path is correct
+
+head(H_FIRE_PNT_point)
+
+# Filter data for the year 2021
+filtered_fire_data_2021 <- H_FIRE_PNT_point %>%
+  filter(FIRE_YEAR == 2021)
+
+# Check the filtered data
+head(filtered_fire_data_2021)
+
+# Ensure bbox2 is valid and formatted correctly
+bbox2 <- st_bbox(bc_boundary)
+
+raster_res <- 50000  # This resolution in meters 
+raster_template <- raster(extent(bbox2), res = c(raster_res, raster_res))
+
+# Estimate density using kernel density estimate
+density_raster <- raster::rasterize(st_as_sf(filtered_fire_data_2021), raster_template, fun = "count", field = 1)
+
+# Ensure all NAs are turned to zeros in the raster
+density_raster[is.na(density_raster)] <- 0
+
+# Convert the raster to a data frame and replace any potential NAs with zeros
+density_df <- as.data.frame(density_raster, xy = TRUE)
+density_df[is.na(density_df)] <- 0  # Replace NAs in the data frame with zeros
+
+# Step to rename the 'layer' column to 'fires' if applicable
+colnames(density_df)[colnames(density_df) == "layer"] <- "fires"
+
+# Convert to a spatial points data frame using sf (if needed later)
+density_sf <- st_as_sf(density_df, coords = c("x", "y"), crs = st_crs(bc_boundary))
+
+# Plotting the density map with the polygon boundary
+ggplot() +
+  geom_raster(data = density_df, aes(x = x, y = y, fill = fires)) +  # Use 'fires' from the data frame
+  geom_sf(data = bc_boundary, fill = NA, color = "black") + # Boundary polygon
+  scale_fill_viridis_c(option = "plasma") +  # Using a color scale
+  theme_minimal() +
+  labs(title = "Density Map of Fire Points",
+       x = "Longitude",
+       y = "Latitude",
+       fill = "Density")
+
+# Convert the raster to a data frame
+density_df <- as.data.frame(density_raster, xy = TRUE)
+
+# Rename the 'layer' column to 'fires'
+colnames(density_df)[colnames(density_df) == "layer"] <- "fires"
+
+# Replace NA values with zeros
+density_df[is.na(density_df$fires), "fires"] <- 0
+
+# Convert to a spatial points data frame using sf
+density_sf <- st_as_sf(density_df, coords = c("x", "y"), crs = st_crs(bc_boundary))
+
+# Write to a shapefile
+st_write(density_sf, "density_points.shp", delete_dsn = TRUE)
+
+# Create a simple map
+ggplot() +
+  geom_sf(data = bc_boundary, fill = NA, color = "black") +  # Plot the boundary polygon
+  geom_sf(data = density_sf, aes(color = fires), size = 1) +  # Plot the density points with color mapping
+  scale_color_viridis_c(option = "plasma", name = "Density of Fires") +  # Color scale for density values
+  theme_minimal() +
+  labs(title = "Density of Fires within Boundary",
+       x = "Longitude",
+       y = "Latitude")
+
+
+
+```
+#### Combine Climate and Events Data
+```r
+# Perform the spatial join
+joined_data <- st_join(idw_clipped, density_sf, join = st_intersects)
+
+# Select needed columns
+final_data <- joined_data[, c("var1.pred", "fires")]
+
+# Rename column
+final_data <- final_data %>%
+  rename(temperature = var1.pred)
+
+# Replace NA values in the fires column with 0
+final_data <- final_data %>%
+  mutate(fires = ifelse(is.na(fires), 0, fires))
+
+# Create the map
+ggplot(data = final_data) +
+  geom_sf(aes(fill = fires)) +
+  scale_fill_viridis_c(option = "C") +
+  theme_minimal() +
+  labs(title = "Temperature Map",
+       fill = "Temperature (°C)") +
+  theme(legend.position = "right")
+
+# Save final_data as a shapefile
+st_write(final_data, "final_data.shp", delete_dsn = TRUE)
+
+# Convert final_data to a data frame
+final_data_df <- st_drop_geometry(final_data)
+
+# Write as CSV
+write.csv(final_data_df, "final_data.csv", row.names = FALSE)
 
 ```
 
@@ -582,10 +701,12 @@ ggsave("Clipped_IDW_Interpolation_Map.png", width = 10, height = 8, dpi = 300)
 ```
 ### Regression
 
-Regression analysis generates coefficients that represent the slope and intercept of a line that best fits the observed data points (Oyana, 2021, p. 148). The relationship is confirmed when (1) when there is a tendency for the dependent(or response)  variable,  Y,  to  vary  with  an  independent  (or  predictor)  variable,  X, in a systematic fashion and (2) when there is a well-defined scattering of data points around the curve that depicts some type of model direction. Linear regression can also be used to predict variable values, estimate unknown values given the values of another. It is best to take a two-tiered approach that involves Least Squares Regression  (LSR) and Geographically Weighted Regression (GWR) (Oyana, 2021, 149). 
+Regression analysis generates coefficients that represent the slope and intercept of a line that best fits the observed data points (Oyana, 2021, p. 148). The relationship is confirmed when the  when the dependent varies with the independent variable, or when there is scattering around the chosen model. Linear regression can also be used to predict variable values, and estimate unknown values given the values of another. It is best to take a two-tiered approach that involves Least Squares Regression  (LSR) and Geographically Weighted Regression (GWR) (Oyana, 2021, 149). 
 
 #### Least Squares Regression
-Least Squares Regression modelling helps identify important predictors that may explain the spatial processes in a given area, while taking into consideration the residuals (errors). We are interest in looking at the overall patterns that suggest a linear relationship, to understand how much temperature explains wildfire. The residuals are then tested in the model and are randomly distributed (Oyana, 2021, p. 149). A simple regression model can be written as follows:
+Least Squares Regression modelling helps identify important predictors that may explain the spatial processes in a given area, while taking into consideration the residuals (errors). We are interested in looking at the overall patterns that suggest a linear relationship, to understand how much temperature explains wildfire. The residuals are then tested in the model and are randomly distributed (Oyana, 2021, p. 149). We then test for a GLobal Moran's I to see if there is positive spatial autocorrelation.
+
+A simple regression model can be written as follows:
 
 $$
 Y = a + bX
@@ -625,7 +746,7 @@ ggsave("residuals_map.png", width = 10, height = 8, dpi = 300)
 
 ```
 #### Geographically Weighted Regression
-If the LSR model revealed evidence of spatial autocorrelation in the dependent variable, we can proceed with fitting a GWR model. This regression analysis enablesthe computation of raw and standardized regression coefficients and the standardized residuals to differentiate local spatial variations (Oyana, 2021, p. 150). GWR allows us to quantify how temperature influences wildfire density in British Columbia using these coefficients and residuals. 
+If the LSR model revealed evidence of spatial autocorrelation in the dependent variable, we can proceed with fitting a GWR model. This regression analysis enables the computation of raw and standardized regression coefficients and the standardized residuals to differentiate local spatial variations (Oyana, 2021, p. 150). GWR allows us to quantify how temperature influences wildfire density in British Columbia using these coefficients and residuals. 
 
 $$
 Y_{uv} = \alpha + \beta_1 X_{uv} + \beta_2 E_{uv} + \beta_3 A_{uv} + \epsilon_{uv}
@@ -637,19 +758,6 @@ Where:
 - \( \alpha \) is the intercept.
 - \( \beta_1, \beta_2, \beta_3 \) are the coefficients for the independent variables.
 - \( \epsilon_{uv} \) represents the error term.
-
-The main assumptions of a traditional regression model are as follows from Oyana et al.:
-
-1. The dependent variable is a linear function of a specific set of independent variables, plus an error term. This highlights the importance of linearity and the correct specification of the model. In a bivariate model, this is represented as \( Y = \beta_0 + \beta_1X + \epsilon \).
-
-2. The errors (or residuals) must have a zero mean and constant variance, which implies the assumption of homoscedasticity.
-
-3. The errors must be independent, meaning the value of one error does not influence the value of another error. This assumes no autocorrelation, either spatially or temporally.
-
-4. For each value of \( X \), the errors are expected to be normally distributed around the regression line, which reflects the assumption of normality.
-
-5. There should be no strong or perfect linear relationships between the independent variables. This implies the assumption of no multicollinearity, meaning the independent variables should not be highly correlated with each other.
-
 
 ```r
 install.packages("spgwr")
@@ -1057,120 +1165,6 @@ ggplot() +
   theme(legend.position = "bottom")
 ```
 
-### Density for Events Data
-```r
-#Set working directory
-dir <- "C:/Users/micha/Documents/GEOG 418/Final Project"
-setwd(dir)
-
-# Load your point data (make sure to adjust the path). Here we use a wildfire dataset from the BC Data Catoluge called H_FIRE_PNT_point and our BC Boundary file.
-H_FIRE_PNT_point <- st_read("H_FIRE_PNT_point.shp")
-bc_boundary <- st_read("bc_boundary.shp")  # Ensure the path is correct
-
-head(H_FIRE_PNT_point)
-
-# Filter data for the year 2021
-filtered_fire_data_2021 <- H_FIRE_PNT_point %>%
-  filter(FIRE_YEAR == 2021)
-
-# Check the filtered data
-head(filtered_fire_data_2021)
-
-# Ensure bbox2 is valid and formatted correctly
-bbox2 <- st_bbox(bc_boundary)
-
-raster_res <- 50000  # This resolution in meters 
-raster_template <- raster(extent(bbox2), res = c(raster_res, raster_res))
-
-# Estimate density using kernel density estimate
-density_raster <- raster::rasterize(st_as_sf(filtered_fire_data_2021), raster_template, fun = "count", field = 1)
-
-# Ensure all NAs are turned to zeros in the raster
-density_raster[is.na(density_raster)] <- 0
-
-# Convert the raster to a data frame and replace any potential NAs with zeros
-density_df <- as.data.frame(density_raster, xy = TRUE)
-density_df[is.na(density_df)] <- 0  # Replace NAs in the data frame with zeros
-
-# Step to rename the 'layer' column to 'fires' if applicable
-colnames(density_df)[colnames(density_df) == "layer"] <- "fires"
-
-# Convert to a spatial points data frame using sf (if needed later)
-density_sf <- st_as_sf(density_df, coords = c("x", "y"), crs = st_crs(bc_boundary))
-
-# Plotting the density map with the polygon boundary
-ggplot() +
-  geom_raster(data = density_df, aes(x = x, y = y, fill = fires)) +  # Use 'fires' from the data frame
-  geom_sf(data = bc_boundary, fill = NA, color = "black") + # Boundary polygon
-  scale_fill_viridis_c(option = "plasma") +  # Using a color scale
-  theme_minimal() +
-  labs(title = "Density Map of Fire Points",
-       x = "Longitude",
-       y = "Latitude",
-       fill = "Density")
-
-# Convert the raster to a data frame
-density_df <- as.data.frame(density_raster, xy = TRUE)
-
-# Rename the 'layer' column to 'fires'
-colnames(density_df)[colnames(density_df) == "layer"] <- "fires"
-
-# Replace NA values with zeros
-density_df[is.na(density_df$fires), "fires"] <- 0
-
-# Convert to a spatial points data frame using sf
-density_sf <- st_as_sf(density_df, coords = c("x", "y"), crs = st_crs(bc_boundary))
-
-# Write to a shapefile
-st_write(density_sf, "density_points.shp", delete_dsn = TRUE)
-
-# Create a simple map
-ggplot() +
-  geom_sf(data = bc_boundary, fill = NA, color = "black") +  # Plot the boundary polygon
-  geom_sf(data = density_sf, aes(color = fires), size = 1) +  # Plot the density points with color mapping
-  scale_color_viridis_c(option = "plasma", name = "Density of Fires") +  # Color scale for density values
-  theme_minimal() +
-  labs(title = "Density of Fires within Boundary",
-       x = "Longitude",
-       y = "Latitude")
-
-
-```
-### Combine Climate and Events Data
-```r
-# Perform the spatial join
-joined_data <- st_join(idw_clipped, density_sf, join = st_intersects)
-
-# Select needed columns
-final_data <- joined_data[, c("var1.pred", "fires")]
-
-# Rename column
-final_data <- final_data %>%
-  rename(temperature = var1.pred)
-
-# Replace NA values in the fires column with 0
-final_data <- final_data %>%
-  mutate(fires = ifelse(is.na(fires), 0, fires))
-
-# Create the map
-ggplot(data = final_data) +
-  geom_sf(aes(fill = fires)) +
-  scale_fill_viridis_c(option = "C") +
-  theme_minimal() +
-  labs(title = "Temperature Map",
-       fill = "Temperature (°C)") +
-  theme(legend.position = "right")
-
-# Save final_data as a shapefile
-st_write(final_data, "final_data.shp", delete_dsn = TRUE)
-
-# Convert final_data to a data frame
-final_data_df <- st_drop_geometry(final_data)
-
-# Write as CSV
-write.csv(final_data_df, "final_data.csv", row.names = FALSE)
-
-```
 ## Results
 ### Point Pattern Analysis
 We evaluated spatial distribution of fires, to determine if points are clustered, dispersed, or random. We employ three methods to complete our point pattern analysis: Nearest Neighbour Analysis (NNA), Quadrat Analysis, and k-function. 
