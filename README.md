@@ -460,6 +460,8 @@ envelope_k <- envelope(event.ppp, Kest, nsim = 99)
 plot(envelope_k)
 ```
 ### Interpolation
+### Semivariogram
+
 #### Inverse Weighted Distance
 
 We then created a density surface for temperature using the point data from the weather stations across the province. The Inverse Distance Weighting method was employed to estimate a surface. IDW is a deterministic interpolation technique that estimates the values of unsampled points from values at nearby locations (Oyana, 2021, p. 282). This helps predict values where measurements are not available. It’s important to note it is topographically sensitive. 
@@ -1211,8 +1213,27 @@ We evaluated spatial distribution of fires, to determine if points are clustered
 Figure 12: Semivariogram Model
 ### Regression
 #### Least Squares Regression
+
+
+
+Moran I test under randomisation
+
+data:  final_data_sf$residuals  
+weights: weights    
+
+Moran I statistic standard deviate = 16.144,
+p-value < 2.2e-16
+alternative hypothesis: greater
+sample estimates:
+Moran I statistic       Expectation 
+     0.4097796526     -0.0021459227 
+         Variance 
+     0.0006510283 
+
 ![Map](BCRegression.png)
 *Figure 12: British Columbia Map of Residuals from Least Squares Regression Analysis
+![Map](Detailed_Model_Summary.png)
+*Figure x: Detailed Ordinal Least Squares Regression Model Table
 #### Geographically Weighted Regression
 ![Map](LocalR2.png)
 *Figure 13: Map of Local R2 with Banwidth of 50 km for British Columbia
@@ -1229,6 +1250,18 @@ Overrall summary
 ## Results
 ### Point Pattern Analysis
 The NNDMean and NNDRandom  values from this test indicate that wildfire events in British Columbia are spatially clustered. This result shows strong evidence of significant clustering as indicated by the z-score of -65.2628 (see Figure 7). The quadrat analysis results indicate that wildfires have a clustered spatial distribution, with strong evidence that the clustering is statistically significant as indicated by the chi square value of 12866. 6506, which produces a p-value \< 0.0001 (see Figure 8). Please see the K-Function results for wildfire events in 2021 (Figure 9). They appear to be significantly spatially clustered at distances greater than 10,000 metres.
+
+### Interpolation
+
+### Inverse Distance Weighting
+Our interpolated surface of climate in British Columbia helps us create a temperature average for the province, even from unknown points. In the northern region, we see cooler temperature averages between 8 and 12 degrees. It is important to note here that there was less station coverage over the northern half of the province, so results may be slightly distorted. We see high temperature values in the southern interior of the province, as well as the eastern coast of Vancouver Island and the lower mainland. This corresponds with expected climate zones of these areas. 
+### Semivariogram
+### Kriging
+
+### Regression
+#### Least Squares Regression
+
+#### Geographically Weighted Regression
 
 Describe results
 Overall, the results from this study show…..(ex, rainfall is poor predictor of variability of wildfire)
