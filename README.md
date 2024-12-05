@@ -1224,15 +1224,12 @@ Moran I statistic       Expectation
 
 ## Results
 ### Point Pattern Analysis
-The NNDMean and NNDRandom  values from this test indicate that wildfire events in British Columbia are spatially clustered. This result shows strong evidence of significant clustering as indicated by the z-score of -65.2628 (see Figure 7). The quadrat analysis results indicate that wildfires have a clustered spatial distribution, with strong evidence that the clustering is statistically significant as indicated by the chi square value of 12866. 6506, which produces a p-value \< 0.0001 (see Figure 8). Please see the K-Function results for wildfire events in 2021 (Figure 9). They appear to be significantly spatially clustered at distances greater than 10,000 metres.
+The NNDMean and NNDRandom  values from this test indicate that wildfire events in British Columbia are spatially clustered. This result shows strong evidence of significant clustering as indicated by the z-score of -65.2628 (see Figure 7). Therefore, we reject our null hypothesis.The quadrat analysis results indicate that wildfires have a clustered spatial distribution, with strong evidence that the clustering is statistically significant as indicated by the chi square value of 12866. 6506, which produces a p-value \< 0.0001 (see Figure 8). Therefore, we reject the null hypothesis. Please see the K-Function results for wildfire events in 2021 (Figure 9). They appear to be significantly spatially clustered at distances greater than 10,000 metres. Therefore, we reject the null hypothesis.
 
 ### Interpolation
 
 ### Inverse Distance Weighting
-Our interpolated surface of climate in British Columbia helps us create a temperature average for the province, even from unknown points. In the northern region, we see cooler temperature averages between 8 and 12 degrees. It is important to note here that there was less station coverage over the northern half of the province, so results may be slightly distorted. We see high temperature values in the southern interior of the province, as well as the eastern coast of Vancouver Island and the lower mainland. This corresponds with expected climate zones of these areas. 
-### Semivariogram
-
-We chose an exponential model to communicate the degree of spatial autocorrelation present in our dataset. The semivariogram has a psill value of 10.74561, and a range of 7010.943. There is very little noise as the space between the nugget and sill is quite small.
+Our interpolated surface of climate in British Columbia helps us create a temperature average for the province, even from unknown points. In the northern region, we see cooler temperature averages between 8 and 12 degrees. It is important to note here that there was less station coverage over the northern half of the province, so results may be slightly distorted. We see high temperature values in the southern interior of the province, as well as the eastern coast of Vancouver Island and the lower mainland. This corresponds with expected climate zones of these areas. For the semivariogram, We chose an exponential model to communicate the degree of spatial autocorrelation present in our dataset. The semivariogram has a psill value of 10.74561, and a range of 7010.943. There is very little noise as the space between the nugget and sill is quite small.
 
 ### Regression
 
