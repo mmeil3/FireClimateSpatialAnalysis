@@ -1021,10 +1021,10 @@ ggsave("Clipped_IDW_Interpolation_Map.png", width = 10, height = 8, dpi = 300)
 ```
 ### Regression
 
-Regression analysis generates coefficients that represent the slope and intercept of a line that best fits the observed data points (Oyana, 2021, p. 148). The relationship is confirmed when the  when the dependent varies with the independent variable, or when there is scattering around the chosen model. Linear regression can also be used to predict variable values, and estimate unknown values given the values of another. It is best to take a two-tiered approach that involves Least Squares Regression  (LSR) and Geographically Weighted Regression (GWR) (Oyana, 2021, 149). 
+Regression analysis generates coefficients that try to best fit a line with the observed data points (Oyana, 2021, p. 148). The relationship is confirmed when the dependent varies with the independent variable, or when there is scattering around the chosen model. It is best to take a two-tiered approach that involves Least Squares Regression  (LSR) and Geographically Weighted Regression (GWR) (Oyana, 2021, 149). 
 
-#### Least Squares Regression
-Least Squares Regression modelling helps identify important predictors that may explain the spatial processes in a given area, while taking into consideration the residuals (errors). We are interested in looking at the overall patterns that suggest a linear relationship, to understand how much temperature explains wildfire. The residuals are then tested in the model and are randomly distributed (Oyana, 2021, p. 149). We then test for a GLobal Moran's I to see if there is positive spatial autocorrelation.
+#### Ordinary Least Squares Regression
+Least Squares Regression modelling helps identify important predictors that may explain the spatial processes in a given area, while taking into consideration the residuals. We are interested in looking at the overall patterns that suggest a linear relationship, to understand how much temperature explains wildfire. The residuals are then tested in the model and are randomly distributed (Oyana, 2021, p. 149). We then test for a GLobal Moran's I to see if there is positive spatial autocorrelation.
 
 A simple regression model can be written as follows:
 
@@ -1066,7 +1066,7 @@ ggsave("residuals_map.png", width = 10, height = 8, dpi = 300)
 
 ```
 #### Geographically Weighted Regression
-If the LSR model revealed evidence of spatial autocorrelation in the dependent variable, we can proceed with fitting a GWR model. This regression analysis enables the computation of raw and standardized regression coefficients and the standardized residuals to differentiate local spatial variations (Oyana, 2021, p. 150). GWR allows us to quantify how temperature influences wildfire density in British Columbia using these coefficients and residuals. 
+If the Least Squares Regression model revealed evidence of spatial autocorrelation in the dependent variable, we can proceed with fitting a Geographically Weighted Regression model. GWR allows us to quantify how temperature influences wildfire density in British Columbia using these coefficients and residuals (Oyana, 2021, p. 150). 
 
 $$
 Y_{uv} = \alpha + \beta_1 X_{uv} + \beta_2 E_{uv} + \beta_3 A_{uv} + \epsilon_{uv}
