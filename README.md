@@ -1210,6 +1210,9 @@ Moran I statistic       Expectation
          Variance 
      0.0006510283 
 
+Figure x: Morans I results from Ordinary Least Squares Regression Model
+    
+
 ![Map](BCRegression.png)
 *Figure 12: British Columbia Map of Residuals from Least Squares Regression Analysis
 ![Map](Detailed_Model_Summary.png)
@@ -1242,13 +1245,10 @@ GWR: From our Ordinary Least Squares Model, we determined that Temperature does 
 
 ### Summary
 
-Overall, we c
+Overall, our statistical analysis of point pattern analysis, interpolation, and regression can answer the two research questions we outlined at the beginning: Can temperature explain wildfire occurrence in British Columbia? Are these events clustered or dispersed? Our results showed significant clustering of wildfire events. We also concluded that temperature does a moderate job at explaining wildfire occurrence. While temperature is not an entirely effective marker of wildfire, this is to be expected as extreme weather events are impacted by precipitation, humidity, vegetation, logging activities, and a lack of traditional management activities (Stahl et al. 2006). It's difficult to understand a complex environmental mosaic by looking at only one variable. 
 
-Can temperature explain wildfire occurence in British Columbia? Are these events clustered or dispersed?
+While our analysis was robust, some shortcomings were noted. We were only using one variable (temperature), one year of data, and noticed a lack of weather station coverage. While we know temperature is an important variable, many other factors contribute to the spread of wildfire. We also only used one year of data. While this year was important due to the severe temperature and fire events that occured in the province, specifically Lytton, British Columbia, this limits our scope of understanding of climate and wildlife trends.  While we can go off of previous literature to supplement this, a more robust statistical analysis could use more historical fire data. Lastly, there are signficantly less weather stations in the northern half of the province, sparking challenges to getting full climate coverage of the province. Perhaps moving away from the PCDS source to other smaller weather stations up north would be worthwhile, but is likely another project all in itselt to build a database of adequetely dispered weather stations. Previous literature has outlined trends in wildfire increased by looking at a larger temporal scale (Parisien et al., 2023), some employ temperature along with relative humidity for more detailed results (Ozelkan et al, 2015)
 
 
 
-Task 10: Provide one sentence that explains the contribution of your study to the relevant literature.
-Do these findings match literature? Find papers in PNW
-Comparing against what others have found
 
