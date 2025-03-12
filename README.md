@@ -1,5 +1,5 @@
 ### Investigating Associations between British Columbia's Temperature and Fire Events in 2021: Point Pattern Analysis, Interpolation, and Regression
-#### Michaela Meil: Advanced Spatial Analysis Final Project
+#### Michaela Meil: Advanced Spatial Analysis
 #### December 2024
 
 ## Context
